@@ -3,6 +3,7 @@
 ################################################################################
 ROOT					?= $(CURDIR)/..
 TOOLCHAIN_ROOT 			?= $(ROOT)/toolchains
+#TOOLCHAIN_ROOT 			?= ${HOME}/work/tcwg/bin
 
 AARCH32_PATH 			?= $(TOOLCHAIN_ROOT)/aarch32
 AARCH32_CROSS_COMPILE 		?= $(AARCH32_PATH)/bin/arm-linux-gnueabihf-

@@ -9,8 +9,8 @@ COMPILE_S_USER    ?= 32
 COMPILE_S_KERNEL  ?= 64
 
 # Normal/secure world console UARTs: 3 or 0 [default 3]
-CFG_NW_CONSOLE_UART ?= 3
-CFG_SW_CONSOLE_UART ?= 3
+CFG_NW_CONSOLE_UART ?= 0
+CFG_SW_CONSOLE_UART ?= 0
 
 ################################################################################
 # Includes
@@ -97,10 +97,13 @@ endif
 
 arm-tf: optee-os edk2
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) all fip
+	@cp $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/fip.bin $(OUT_PATH)/
+
 
 .PHONY: arm-tf-clean
 arm-tf-clean:
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) clean
+	@rm -f $(OUT_PATH)/fip.bin
 
 ################################################################################
 # Busybox
@@ -144,7 +147,11 @@ edk2-clean: edk2-clean-common
 # Linux kernel
 ################################################################################
 LINUX_DEFCONFIG_COMMON_ARCH ?= arm64
-LINUX_DEFCONFIG_COMMON_FILES ?= $(LINUX_PATH)/arch/arm64/configs/defconfig \
+LINUX_DEFCONFIG_COMMON_FILES ?= $(LINUX_PATH)/arch/arm64/configs/hikey_defconfig \
+				$(CURDIR)/kconfigs/hikey.conf \
+				$(PATCHES_PATH)/kernel_config/usb_net_dm9601.conf \
+				$(PATCHES_PATH)/kernel_config/ftrace.conf
+#LINUX_DEFCONFIG_COMMON_FILES ?= $(LINUX_PATH)/arch/arm64/configs/defconfig \
 				$(CURDIR)/kconfigs/hikey.conf \
 				$(PATCHES_PATH)/kernel_config/usb_net_dm9601.conf \
 				$(PATCHES_PATH)/kernel_config/ftrace.conf
@@ -186,7 +193,17 @@ linux-cleaner: linux-cleaner-common
 ################################################################################
 # OP-TEE
 ################################################################################
-OPTEE_OS_COMMON_FLAGS += PLATFORM=hikey CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART)
+OPTEE_OS_COMMON_FLAGS += PLATFORM=hikey CFG_TEE_TA_LOG_LEVEL=3 CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART)
+OPTEE_OS_COMMON_FLAGS += CFG_TEE_CORE_DEBUG=y CFG_TEE_CORE_MALLOC_DEBUG=y CFG_TEE_TA_MALLOC_DEBUG=y CFG_PM_DEBUG=1 CFG_VERBOSE_INFO=y
+OPTEE_OS_COMMON_FLAGS += CFG_TEE_CORE_EMBED_INTERNAL_TESTS=y CFG_WITH_STATS=y CFG_TEE_FS_KEY_MANAGER_TEST=y
+#Test call force
+#OPTEE_OS_COMMON_FLAGS += CFG_GPIO=n CFG_PL061=y CFG_SPI=n CFG_PL022=y
+#Test auto set CFG_GPIO=y by call force
+#OPTEE_OS_COMMON_FLAGS += CFG_PL061=y CFG_PL022=y NOWERROR=1
+#PL061 and PL022 and SPI enabled by default
+#OPTEE_OS_COMMON_FLAGS += CFG_SPI=y
+OPTEE_OS_COMMON_FLAGS += CFG_SPI_TEST=y
+#OPTEE_OS_COMMON_FLAGS += NOWERROR=1
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=hikey
 
 optee-os: optee-os-common
@@ -202,6 +219,7 @@ optee-client-clean: optee-client-clean-common
 ################################################################################
 # xtest / optee_test
 ################################################################################
+XTEST_COMMON_FLAGS += CFG_TEE_TA_LOG_LEVEL=3
 
 xtest: xtest-common
 
@@ -360,10 +378,14 @@ boot-img-clean:
 ################################################################################
 lloader: arm-tf
 	$(MAKE) -C $(LLOADER_PATH) BL1=$(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin CROSS_COMPILE="$(CCACHE)$(AARCH32_CROSS_COMPILE)" PTABLE_LST=linux-4g
+	@cp $(LLOADER_PATH)/l-loader.bin $(OUT_PATH)/
+	@cp $(LLOADER_PATH)/ptable*.img $(OUT_PATH)/
 
 .PHONY: lloader-clean
 lloader-clean:
 	$(MAKE) -C $(LLOADER_PATH) clean
+	@rm -f $(OUT_PATH)/l-loader.bin
+	@rm -f $(OUT_PATH)/ptable*.img
 
 ################################################################################
 # nvme image
