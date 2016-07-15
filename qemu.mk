@@ -77,6 +77,7 @@ LINUX_DEFCONFIG_COMMON_FILES := \
 
 linux-defconfig: $(LINUX_PATH)/.config
 
+#LINUX_COMMON_FLAGS += ARCH=arm V=1
 LINUX_COMMON_FLAGS += ARCH=arm
 
 linux: linux-common
@@ -94,7 +95,7 @@ linux-cleaner: linux-cleaner-common
 ################################################################################
 # OP-TEE
 ################################################################################
-OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt
+OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt CFG_TEE_TA_LOG_LEVEL=3
 optee-os: optee-os-common
 
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt
@@ -137,6 +138,7 @@ filelist-tee: xtest helloworld
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/hello_world $(HELLOWORLD_PATH)/host/hello_world 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "file /bin/lcu14_hello_world $(ROOT)/lcu14_optee_hello_world/host/hello_world 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/optee_armtz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
@@ -145,20 +147,36 @@ filelist-tee: xtest helloworld
 	@echo "# Secure storage dir" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data/tee 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
+	@if [ -e $(OPTEE_GENDRV_MODULE) -o -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
 		echo "# OP-TEE device" >> $(GEN_ROOTFS_FILELIST); \
 		echo "dir /lib/modules 755 0 0" >> $(GEN_ROOTFS_FILELIST); \
 		echo "dir /lib/modules/$(call KERNEL_VERSION) 755 0 0" >> $(GEN_ROOTFS_FILELIST); \
+	fi
+	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
 		echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko $(OPTEE_GENDRV_MODULE) 755 0 0" >> $(GEN_ROOTFS_FILELIST); \
+	fi
+	@if [ -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
+		find $(LINUX_PATH)/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_FILELIST); \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm64/crypto/sha256-arm64.ko -o -e $(LINUX_PATH)/arch/arm64/crypto/sha256-neon.ko ]; then \
+		find $(LINUX_PATH)/arch/arm64/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_FILELIST); \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm/crypto/sha256-arm.ko ]; then \
+		find $(LINUX_PATH)/arch/arm/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_FILELIST); \
 	fi
 	@echo "# OP-TEE Client" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /lib/libteec.so.1.0 $(OPTEE_CLIENT_EXPORT)/lib/libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "file /bin/gp_conf_client $(ROOT)/gp_conf/host/gp_conf_client 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "file /lib/optee_armtz/67707465-6563-6f6e-666c696e61726f15.ta $(ROOT)/out/gp_conf_ta/67707465-6563-6f6e-666c696e61726f15.ta 444 0 0" >> $(GEN_ROOTFS_FILELIST)
 
 update_rootfs: busybox optee-client filelist-tee
-	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
+	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt $(GEN_ROOTFS_PATH)/../comcast_cryptoapi_ta_example/filelist-comcast_demo_qemu_fs.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
 	cd $(GEN_ROOTFS_PATH); \
 		$(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
 
@@ -182,7 +200,7 @@ endef
 
 define launch-terminal
 	@nc -z  127.0.0.1 $(1) || \
-	xterm -title $(2) -e $(BASH) -c "$(SOC_TERM_PATH)/soc_term $(1)" &
+	gnome-terminal -e "$(BASH) -c '$(SOC_TERM_PATH)/soc_term $(1); exec /bin/bash -i'" --title=$(2)
 endef
 
 define wait-for-ports

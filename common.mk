@@ -103,7 +103,7 @@ endif
 define KERNEL_VERSION
 $(shell cd $(LINUX_PATH) && $(MAKE) --no-print-directory kernelversion)
 endef
-DEBUG ?= 0
+DEBUG ?= 1
 
 ################################################################################
 # default target is all
@@ -219,6 +219,7 @@ XTEST_COMMON_FLAGS ?= CROSS_COMPILE_HOST=$(CROSS_COMPILE_NS_USER)\
 	TA_DEV_KIT_DIR=$(OPTEE_OS_TA_DEV_KIT_DIR) \
 	CFG_DEV_PATH=$(ROOT) \
 	COMPILE_NS_USER=$(COMPILE_NS_USER) \
+	CFG_TEE_TA_LOG_LEVEL=3 \
 	O=$(OPTEE_TEST_OUT_PATH)
 
 xtest-common: optee-os optee-client
