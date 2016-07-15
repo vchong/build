@@ -82,6 +82,7 @@ LINUX_DEFCONFIG_COMMON_FILES := \
 
 linux-defconfig: $(LINUX_PATH)/.config
 
+#LINUX_COMMON_FLAGS += ARCH=arm V=1
 LINUX_COMMON_FLAGS += ARCH=arm
 
 linux: linux-common
@@ -99,7 +100,7 @@ linux-cleaner: linux-cleaner-common
 ################################################################################
 # OP-TEE
 ################################################################################
-OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt
+OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt CFG_TEE_TA_LOG_LEVEL=3
 optee-os: optee-os-common
 
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=vexpress-qemu_virt

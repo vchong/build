@@ -124,7 +124,7 @@ define expand-env-var
 awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH -3);gsub("[$$]{"var"}",ENVIRON[var])}}1'
 endef
 
-DEBUG ?= 0
+DEBUG ?= 1
 
 ################################################################################
 # default target is all
@@ -323,6 +323,7 @@ XTEST_COMMON_FLAGS ?= CROSS_COMPILE_HOST=$(CROSS_COMPILE_NS_USER)\
 	TA_DEV_KIT_DIR=$(OPTEE_OS_TA_DEV_KIT_DIR) \
 	OPTEE_CLIENT_EXPORT=$(OPTEE_CLIENT_EXPORT) \
 	COMPILE_NS_USER=$(COMPILE_NS_USER) \
+	CFG_TEE_TA_LOG_LEVEL=3 \
 	O=$(OPTEE_TEST_OUT_PATH)
 
 .PHONY: xtest-common
@@ -380,7 +381,7 @@ benchmark-app-clean-common:
 ################################################################################
 .PHONY: update_rootfs-common
 update_rootfs-common: busybox filelist-tee
-	cat $(GEN_ROOTFS_PATH)/filelist-final.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
+	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/../comcast_cryptoapi_ta_example/filelist-comcast_demo_qemu_fs.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
 	cat $(GEN_ROOTFS_FILELIST) >> $(GEN_ROOTFS_PATH)/filelist.tmp
 	cd $(GEN_ROOTFS_PATH) && \
 	        $(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | \
@@ -410,6 +411,8 @@ filelist-tee-common: optee-client xtest helloworld
 	@if [ -e $(HELLOWORLD_PATH)/host/hello_world ]; then \
 		echo "file /bin/hello_world" \
 			"$(HELLOWORLD_PATH)/host/hello_world 755 0 0"	>> $(fl); \
+		echo "file /bin/lcu14_hello_world" \
+			"$(ROOT)/lcu14_optee_hello_world/host/hello_world 755 0 0" >> $(fl}; \
 		echo "file /lib/optee_armtz/8aaaf200-2450-11e4-abe2-0002a5d5c51b.ta" \
 			"$(HELLOWORLD_PATH)/ta/8aaaf200-2450-11e4-abe2-0002a5d5c51b.ta" \
 			"444 0 0" 					>> $(fl); \
@@ -425,13 +428,30 @@ filelist-tee-common: optee-client xtest helloworld
 	@echo "# Secure storage dir" 					>> $(fl)
 	@echo "dir /data 755 0 0" 					>> $(fl)
 	@echo "dir /data/tee 755 0 0" 					>> $(fl)
-	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
+	@if [ -e $(OPTEE_GENDRV_MODULE) -o -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
 		echo "# OP-TEE device" 					>> $(fl); \
 		echo "dir /lib/modules 755 0 0" 			>> $(fl); \
 		echo "dir /lib/modules/$(call KERNEL_VERSION) 755 0 0" \
 									>> $(fl); \
+	fi
+	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
 		echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko" \
 			"$(OPTEE_GENDRV_MODULE) 755 0 0" \
+									>> $(fl); \
+	fi
+	@if [ -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
+		find $(LINUX_PATH)/crypto -name "*.ko" | \
+			sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' \
+									>> $(fl); \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm64/crypto/sha256-arm64.ko -o -e $(LINUX_PATH)/arch/arm64/crypto/sha256-neon.ko ]; then \
+		find $(LINUX_PATH)/arch/arm64/crypto -name "*.ko" | \
+			sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' \
+									>> $(fl); \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm/crypto/sha256-arm.ko ]; then \
+		find $(LINUX_PATH)/arch/arm/crypto -name "*.ko" | \
+			sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' \
 									>> $(fl); \
 	fi
 	@echo "# OP-TEE Client" 					>> $(fl)
@@ -439,8 +459,12 @@ filelist-tee-common: optee-client xtest helloworld
 									>> $(fl)
 	@echo "file /lib/libteec.so.1.0 $(OPTEE_CLIENT_EXPORT)/lib/libteec.so.1.0 755 0 0" \
 									>> $(fl)
-	@echo "slink /lib/libteec.so.1 libteec.so.1.0 755 0 0"			>> $(fl)
-	@echo "slink /lib/libteec.so libteec.so.1 755 0 0" 			>> $(fl)
+	@echo "slink /lib/libteec.so.1 libteec.so.1.0 755 0 0"		>> $(fl)
+	@echo "slink /lib/libteec.so libteec.so.1 755 0 0" 		>> $(fl)
+	@echo "file /bin/gp_conf_client $(ROOT)/gp_conf/host/gp_conf_client 755 0 0" \
+									>> $(fl)
+	@echo "file /lib/optee_armtz/67707465-6563-6f6e-666c696e61726f15.ta $(ROOT)/out/gp_conf_ta/67707465-6563-6f6e-666c696e61726f15.ta 444 0 0" \
+									>> $(fl)
 	@if [ -e $(OPTEE_CLIENT_EXPORT)/lib/libsqlfs.so.1.0 ]; then \
 		echo "file /lib/libsqlfs.so.1.0" \
 			"$(OPTEE_CLIENT_EXPORT)/lib/libsqlfs.so.1.0 755 0 0" \
