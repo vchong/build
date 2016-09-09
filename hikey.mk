@@ -280,11 +280,25 @@ filelist-all: busybox
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
 		sed 's/\(.*\)\/\(.*\)/file \/lib\/optee_armtz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_PATH)/filelist-all.txt
 	@echo "file /lib/optee_armtz/8aaaf200-2450-11e4-abe20002a5d5c51b.ta $(HELLOWORLD_PATH)/ta/8aaaf200-2450-11e4-abe20002a5d5c51b.ta 444 0 0" >> $(GEN_ROOTFS_PATH)/filelist-all.txt
-	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
+	@if [ -e $(OPTEE_GENDRV_MODULE) -o -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
 		echo "# OP-TEE device" >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
 		echo "dir /lib/modules 755 0 0" >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
 		echo "dir /lib/modules/$(call KERNEL_VERSION) 755 0 0" >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
+	fi
+	@if [ -e $(OPTEE_GENDRV_MODULE) ]; then \
 		echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko $(OPTEE_GENDRV_MODULE) 755 0 0" >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
+	fi
+	@if [ -e $(LINUX_PATH)/crypto/tcrypt.ko ]; then \
+		find $(LINUX_PATH)/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm64/crypto/sha256-arm64.ko -o -e $(LINUX_PATH)/arch/arm64/crypto/sha256-neon.ko ]; then \
+		find $(LINUX_PATH)/arch/arm64/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
+	fi
+	@if [ -e $(LINUX_PATH)/arch/arm/crypto/sha256-arm.ko ]; then \
+		find $(LINUX_PATH)/arch/arm/crypto -name "*.ko" | \
+                sed 's/\(.*\)\/\(.*\)/file \/lib\/modules\/$(call KERNEL_VERSION)\/\2 \1\/\2 755 0 0/g' >> $(GEN_ROOTFS_PATH)/filelist-all.txt; \
 	fi
 
 update_rootfs: optee-client xtest helloworld aes-perf sha-perf strace filelist-all linux-gen_init_cpio
