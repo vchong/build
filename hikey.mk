@@ -83,11 +83,14 @@ ARM_TF_EXPORTS ?= \
 	CFLAGS="-O0 -gdwarf-2" \
 	CROSS_COMPILE="$(CCACHE)$(AARCH64_CROSS_COMPILE)"
 
+OPTEE_OS_BIN = $(OPTEE_OS_PATH)/out/arm/core/tee-pager.bin
+
 ARM_TF_FLAGS ?= \
 	BL32=$(OPTEE_OS_BIN) \
 	BL33=$(EDK2_BIN) \
-	BL30=$(MCUIMAGE_BIN) \
+	SCP_BL2=$(MCUIMAGE_BIN) \
 	DEBUG=$(DEBUG) \
+	LOG_LEVEL=50 \
 	PLAT=hikey \
 	SPD=opteed
 
@@ -334,6 +337,9 @@ boot-img-clean:
 ################################################################################
 # l-loader
 ################################################################################
+lloaderbin:
+	$(MAKE) -C $(LLOADER_PATH) BL1=$(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin CROSS_COMPILE="$(CCACHE)$(AARCH32_CROSS_COMPILE)" PTABLE_LST=linux-$(CFG_FLASH_SIZE)g l-loader.bin
+
 lloader: arm-tf
 	$(MAKE) -C $(LLOADER_PATH) BL1=$(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin CROSS_COMPILE="$(CCACHE)$(AARCH32_CROSS_COMPILE)" PTABLE_LST=linux-$(CFG_FLASH_SIZE)g
 

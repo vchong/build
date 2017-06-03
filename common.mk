@@ -117,7 +117,7 @@ endif
 define KERNEL_VERSION
 $(shell cd $(LINUX_PATH) && $(MAKE) --no-print-directory kernelversion)
 endef
-DEBUG ?= 0
+DEBUG ?= 1
 
 ################################################################################
 # default target is all
