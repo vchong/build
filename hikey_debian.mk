@@ -170,6 +170,7 @@ edk2-clean:
 LINUX_DEFCONFIG_COMMON_ARCH ?= arm64
 LINUX_DEFCONFIG_COMMON_FILES ?= $(DEBPKG_SRC_PATH)/debian/config/config \
 				$(DEBPKG_SRC_PATH)/debian/config/arm64/config \
+				$(LINUX_PATH)/arch/arm64/configs/sdp.conf \
 				$(CURDIR)/kconfigs/hikey_debian.conf
 
 linux-defconfig: $(LINUX_PATH)/.config
@@ -195,8 +196,7 @@ linux-cleaner: linux-cleaner-common
 # OP-TEE
 ################################################################################
 OPTEE_OS_COMMON_FLAGS += PLATFORM=hikey \
-			 CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART) \
-			 CFG_SECURE_DATA_PATH=n
+			 CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART)
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=hikey
 
 optee-os: optee-os-common
