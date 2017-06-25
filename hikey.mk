@@ -126,7 +126,7 @@ busybox-cleaner: busybox-clean-common busybox-cleaner-common
 ################################################################################
 EDK2_ARCH ?= AARCH64
 EDK2_DSC ?= OpenPlatformPkg/Platforms/Hisilicon/HiKey/HiKey.dsc
-EDK2_TOOLCHAIN ?= GCC49
+EDK2_TOOLCHAIN ?= GCC5
 
 EDK2_CONSOLE_UART ?= $(CFG_NW_CONSOLE_UART)
 ifeq ($(EDK2_CONSOLE_UART),0)
