@@ -55,6 +55,7 @@ BOOT_IMG			?=$(ROOT)/out/boot-fat.uefi.img
 NVME_IMG			?=$(ROOT)/out/nvme.img
 GRUB_PATH			?=$(ROOT)/grub
 LLOADER_PATH			?=$(ROOT)/l-loader
+ATF_FB_PATH			?=$(ROOT)/atf-fastboot
 PATCHES_PATH			?=$(ROOT)/patches_hikey
 STRACE_PATH			?=$(ROOT)/strace
 
@@ -333,6 +334,24 @@ boot-img: linux update_rootfs edk2 grub
 .PHONY: boot-img-clean
 boot-img-clean:
 	rm -f $(BOOT_IMG)
+
+################################################################################
+# atf-fastboot
+################################################################################
+ARM_TF_EXPORTS ?= \
+	CFLAGS="-O0 -gdwarf-2" \
+	CROSS_COMPILE="$(CCACHE)$(AARCH64_CROSS_COMPILE)"
+
+ATF_FB_FLAGS ?= \
+	DEBUG=$(DEBUG) \
+	PLAT=hikey
+
+atf-fb:
+	$(ARM_TF_EXPORTS) $(MAKE) -C $(ATF_FB_PATH) $(ATF_FB_FLAGS)
+
+.PHONY: atf-fb-clean
+atf-fb-clean:
+	$(ARM_TF_EXPORTS) $(MAKE) -C $(ATF_FB_PATH) $(ATF_FB_FLAGS) clean
 
 ################################################################################
 # l-loader
