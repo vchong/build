@@ -374,9 +374,7 @@ lloader-bin: arm-tf atf-fb
 .PHONY: lloader-bin-clean
 lloader-bin-clean:
 	cd $(LLOADER_PATH) && \
-		rm -f l-loader.bin && \
-		rm -f temp && \
-		rm -f loader
+		rm -f l-loader.bin temp loader start.o
 
 lloader-ptbl:
 	cd $(LLOADER_PATH) && \
@@ -384,7 +382,7 @@ lloader-ptbl:
 
 .PHONY: lloader-ptbl-clean
 lloader-ptbl-clean:
-	cd $(LLOADER_PATH) && rm -f prm_ptable.img
+	cd $(LLOADER_PATH) && rm -f prm_ptable.img sec_ptable.img
 
 lloader: lloader-bin lloader-ptbl
 
