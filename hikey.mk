@@ -297,7 +297,7 @@ $(GRUB_PATH)/Makefile: $(GRUB_PATH)/configure
 .PHONY: grub
 grub: prepare $(GRUB_PATH)/Makefile
 	$(MAKE) -C $(GRUB_PATH); \
-	cd $(GURB_PATH) && ./grub-mkimage \
+	cd $(GRUB_PATH) && ./grub-mkimage \
 		--verbose \
 		--output=$(OUT_PATH)/grubaa64.efi \
 		--config=$(PATCHES_PATH)/grub/grub.configfile \
