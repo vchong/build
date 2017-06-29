@@ -39,6 +39,13 @@ else
 ARM_TF_BUILD			?= release
 endif
 
+ATF_FB_PATH			?=$(ROOT)/atf-fastboot
+ifeq ($(DEBUG),1)
+ATF_FB_BUILD			?= debug
+else
+ATF_FB_BUILD			?= release
+endif
+
 EDK2_PATH 			?= $(ROOT)/edk2
 ifeq ($(DEBUG),1)
 EDK2_BIN 			?= $(EDK2_PATH)/Build/HiKey/DEBUG_GCC49/FV/BL33_AP_UEFI.fd
@@ -55,7 +62,6 @@ BOOT_IMG			?=$(ROOT)/out/boot-fat.uefi.img
 NVME_IMG			?=$(ROOT)/out/nvme.img
 GRUB_PATH			?=$(ROOT)/grub
 LLOADER_PATH			?=$(ROOT)/l-loader
-ATF_FB_PATH			?=$(ROOT)/atf-fastboot
 PATCHES_PATH			?=$(ROOT)/patches_hikey
 STRACE_PATH			?=$(ROOT)/strace
 
@@ -64,7 +70,7 @@ STRACE_PATH			?=$(ROOT)/strace
 ################################################################################
 all: arm-tf boot-img lloader nvme strace
 
-clean: arm-tf-clean busybox-clean edk2-clean linux-clean optee-os-clean optee-client-clean xtest-clean helloworld-clean strace-clean update_rootfs-clean boot-img-clean lloader-clean grub-clean
+clean: arm-tf-clean busybox-clean edk2-clean linux-clean optee-os-clean optee-client-clean xtest-clean helloworld-clean strace-clean update_rootfs-clean boot-img-clean lloader-clean grub-clean atf-fb-clean
 
 cleaner: clean prepare-cleaner busybox-cleaner linux-cleaner strace-cleaner nvme-cleaner grub-cleaner
 
@@ -135,7 +141,7 @@ ifeq ($(EDK2_CONSOLE_UART),0)
 endif
 
 define edk2-call
-	GCC49_AARCH64_PREFIX=$(LEGACY_AARCH64_CROSS_COMPILE) \
+	GCC5_AARCH64_PREFIX=$(AARCH64_CROSS_COMPILE) \
 	build -n 1 -a $(EDK2_ARCH) -t $(EDK2_TOOLCHAIN) -p $(EDK2_DSC) \
 		-b $(EDK2_BUILD) $(EDK2_BUILDFLAGS)
 endef
@@ -356,15 +362,34 @@ atf-fb-clean:
 ################################################################################
 # l-loader
 ################################################################################
-lloaderbin:
-	$(MAKE) -C $(LLOADER_PATH) BL1=$(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin CROSS_COMPILE="$(CCACHE)$(AARCH32_CROSS_COMPILE)" PTABLE_LST=linux-$(CFG_FLASH_SIZE)g l-loader.bin
+lloader-bin: arm-tf atf-fb
+	cd $(LLOADER_PATH) && \
+		ln -sf $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin && \
+		ln -sf $(ATF_FB_PATH)/build/hikey/$(ATF_FB_BUILD)/bl1.bin fastboot.bin && \
+		$(AARCH32_CROSS_COMPILE)gcc -c -o start.o start.S
+		$(AARCH32_CROSS_COMPILE)ld -Bstatic -Tl-loader.lds -Ttext 0xf9800800 start.o -o loader
+		$(AARCH32_CROSS_COMPILE)objcopy -O binary loader temp
+		python gen_loader_hikey.py -o l-loader.bin --img_loader=temp --img_bl1=bl1.bin --img_ns_bl1u=fastboot.bin
 
-lloader: arm-tf
-	$(MAKE) -C $(LLOADER_PATH) BL1=$(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/bl1.bin CROSS_COMPILE="$(CCACHE)$(AARCH32_CROSS_COMPILE)" PTABLE_LST=linux-$(CFG_FLASH_SIZE)g
+.PHONY: lloader-bin-clean
+lloader-bin-clean:
+	cd $(LLOADER_PATH) && \
+		rm -f l-loader.bin && \
+		rm -f temp && \
+		rm -f loader
+
+lloader-ptbl:
+	cd $(LLOADER_PATH) && \
+		$(PTABLE)=linux-$(CFG_FLASH_SIZE)g SECTOR_SIZE=512 bash -x generate_ptable.sh
+
+.PHONY: lloader-ptbl-clean
+lloader-ptbl-clean:
+	cd $(LLOADER_PATH) && rm -f prm_ptable.img
+
+lloader: lloader-bin lloader-ptbl
 
 .PHONY: lloader-clean
-lloader-clean:
-	$(MAKE) -C $(LLOADER_PATH) clean
+lloader-clean: lloader-bin-clean lloader-ptbl-clean
 
 ################################################################################
 # nvme image
