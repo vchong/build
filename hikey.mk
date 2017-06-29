@@ -380,7 +380,7 @@ lloader-bin-clean:
 
 lloader-ptbl:
 	cd $(LLOADER_PATH) && \
-		$(PTABLE)=linux-$(CFG_FLASH_SIZE)g SECTOR_SIZE=512 bash -x generate_ptable.sh
+		PTABLE=linux-$(CFG_FLASH_SIZE)g SECTOR_SIZE=512 bash -x generate_ptable.sh
 
 .PHONY: lloader-ptbl-clean
 lloader-ptbl-clean:
