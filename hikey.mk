@@ -87,7 +87,6 @@ prepare-cleaner:
 # ARM Trusted Firmware
 ################################################################################
 ARM_TF_EXPORTS ?= \
-	CFLAGS="-O0 -gdwarf-2" \
 	CROSS_COMPILE="$(CCACHE)$(AARCH64_CROSS_COMPILE)"
 
 OPTEE_OS_BIN = $(OPTEE_OS_PATH)/out/arm/core/tee-pager.bin
