@@ -107,7 +107,8 @@ ifeq ($(ARM_TF_CONSOLE_UART),0)
 			CRASH_CONSOLE_BASE=PL011_UART0_BASE
 endif
 
-arm-tf: optee-os edk2
+#arm-tf: optee-os edk2
+arm-tf:
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) all fip
 
 .PHONY: arm-tf-clean
@@ -201,7 +202,17 @@ linux-cleaner: linux-cleaner-common
 ################################################################################
 # OP-TEE
 ################################################################################
-OPTEE_OS_COMMON_FLAGS += PLATFORM=hikey CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART)
+OPTEE_OS_COMMON_FLAGS += PLATFORM=hikey CFG_TEE_TA_LOG_LEVEL=3 CFG_CONSOLE_UART=$(CFG_SW_CONSOLE_UART)
+OPTEE_OS_COMMON_FLAGS += CFG_TEE_CORE_DEBUG=y CFG_TEE_CORE_MALLOC_DEBUG=y CFG_TEE_TA_MALLOC_DEBUG=y CFG_PM_DEBUG=1 CFG_VERBOSE_INFO=y
+OPTEE_OS_COMMON_FLAGS += CFG_TEE_CORE_EMBED_INTERNAL_TESTS=y CFG_WITH_STATS=y CFG_TEE_FS_KEY_MANAGER_TEST=y
+#Test call force
+#OPTEE_OS_COMMON_FLAGS += CFG_GPIO=n CFG_PL061=y CFG_SPI=n CFG_PL022=y
+#Test auto set CFG_GPIO=y by call force
+#OPTEE_OS_COMMON_FLAGS += CFG_PL061=y CFG_PL022=y NOWERROR=1
+#PL061 and PL022 and SPI enabled by default
+#OPTEE_OS_COMMON_FLAGS += CFG_SPI=y
+OPTEE_OS_COMMON_FLAGS += CFG_SPI_TEST=y
+#OPTEE_OS_COMMON_FLAGS += NOWERROR=1
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=hikey
 
 optee-os: optee-os-common
@@ -435,7 +446,7 @@ ifneq ($(FROM_RECOVERY),1)
 	@echo "    \"Android Fastboot mode - version x.x Press any key to quit.\""
 	@read -r -p "   Then press any key to continue flashing" dummy
 endif
-	fastboot flash ptable $(LLOADER_PATH)/ptable-linux-$(CFG_FLASH_SIZE)g.img
+	fastboot flash ptable $(LLOADER_PATH)/prm_ptable.img
 	fastboot flash fastboot $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/fip.bin
 	fastboot flash nvme $(NVME_IMG)
 	fastboot flash boot $(BOOT_IMG)
