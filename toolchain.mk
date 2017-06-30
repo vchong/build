@@ -18,8 +18,8 @@ SRC_AARCH64_GCC 		?= http://releases.linaro.org/components/toolchain/binaries/6.
 # toolchain for a while.
 LEGACY_AARCH64_PATH             ?= $(TOOLCHAIN_ROOT)/aarch64-legacy
 LEGACY_AARCH64_CROSS_COMPILE    ?= $(LEGACY_AARCH64_PATH)/bin/aarch64-linux-gnu-
-LEGACY_AARCH64_GCC_VERSION      ?= gcc-linaro-aarch64-linux-gnu-4.9-2014.08_linux
-LEGACY_SRC_AARCH64_GCC          ?= http://releases.linaro.org/archive/14.08/components/toolchain/binaries/${LEGACY_AARCH64_GCC_VERSION}.tar.xz
+LEGACY_AARCH64_GCC_VERSION      ?= gcc-linaro-5.4.1-2017.05-x86_64_aarch64-linux-gnu
+LEGACY_SRC_AARCH64_GCC          ?= http://releases.linaro.org/components/toolchain/binaries/5.4-2017.05/aarch64-linux-gnu/${LEGACY_AARCH64_GCC_VERSION}.tar.xz
 
 # Download toolchain macro for saving some repetition
 # $(1) is $AARCH.._PATH		: i.e., path to the destination
