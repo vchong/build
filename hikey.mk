@@ -147,13 +147,13 @@ endef
 edk2:
 	cd $(EDK2_PATH) && rm -rf OpenPlatformPkg && \
 		ln -s $(OPENPLATPKG_PATH)
-	set -e && cd $(EDK2_PATH) && source edksetup.sh BaseTools && \
+	set -e && cd $(EDK2_PATH) && source edksetup.sh && \
 		$(MAKE) -j1 -C $(EDK2_PATH)/BaseTools && \
 		$(call edk2-call)
 
 .PHONY: edk2-clean
 edk2-clean:
-	set -e && cd $(EDK2_PATH) && source edksetup.sh BaseTools && \
+	set -e && cd $(EDK2_PATH) && source edksetup.sh && \
 		$(call edk2-call) cleanall && \
 		$(MAKE) -j1 -C $(EDK2_PATH)/BaseTools clean
 	rm -rf $(EDK2_PATH)/Build
