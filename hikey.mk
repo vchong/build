@@ -48,12 +48,11 @@ endif
 
 EDK2_PATH 			?= $(ROOT)/edk2
 ifeq ($(DEBUG),1)
-EDK2_BIN 			?= $(EDK2_PATH)/Build/HiKey/DEBUG_GCC5/FV/BL33_AP_UEFI.fd
 EDK2_BUILD			?= DEBUG
 else
-EDK2_BIN 			?= $(EDK2_PATH)/Build/HiKey/RELEASE_GCC5/FV/BL33_AP_UEFI.fd
 EDK2_BUILD			?= RELEASE
 endif
+EDK2_BIN 			?= $(EDK2_PATH)/Build/HiKey/$(EDK2_BUILD)_$(EDK2_TOOLCHAIN)/FV/BL33_AP_UEFI.fd
 OPENPLATPKG_PATH		?= $(ROOT)/OpenPlatformPkg
 
 OUT_PATH			?=$(ROOT)/out
@@ -345,7 +344,7 @@ boot-img: linux update_rootfs edk2 grub
 	mcopy -i $(BOOT_IMG) $(OUT_PATH)/grubaa64.efi ::/EFI/BOOT/
 	mcopy -i $(BOOT_IMG) $(GRUBCFG) ::/EFI/BOOT/grub.cfg
 	mcopy -i $(BOOT_IMG) $(GEN_ROOTFS_PATH)/filesystem.cpio.gz ::/initrd.img
-	mcopy -i $(BOOT_IMG) $(EDK2_PATH)/Build/HiKey/$(EDK2_BUILD)_GCC5/AARCH64/AndroidFastbootApp.efi ::/EFI/BOOT/fastboot.efi
+	mcopy -i $(BOOT_IMG) $(EDK2_PATH)/Build/HiKey/$(EDK2_BUILD)_$(EDK2_TOOLCHAIN)/AARCH64/AndroidFastbootApp.efi ::/EFI/BOOT/fastboot.efi
 
 .PHONY: boot-img-clean
 boot-img-clean:
