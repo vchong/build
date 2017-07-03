@@ -154,8 +154,10 @@ edk2:
 .PHONY: edk2-clean
 edk2-clean:
 	set -e && cd $(EDK2_PATH) && source edksetup.sh BaseTools && \
+		$(call edk2-call) cleanall && \
 		$(MAKE) -j1 -C $(EDK2_PATH)/BaseTools clean
 	rm -rf $(EDK2_PATH)/Build
+	rm -rf $(EDK2_PATH)/Conf/.cache
 	rm -f $(EDK2_PATH)/Conf/build_rule.txt
 	rm -f $(EDK2_PATH)/Conf/target.txt
 	rm -f $(EDK2_PATH)/Conf/tools_def.txt
