@@ -88,10 +88,8 @@ prepare-cleaner:
 ARM_TF_EXPORTS ?= \
 	CROSS_COMPILE="$(CCACHE)$(AARCH64_CROSS_COMPILE)"
 
-OPTEE_OS_BIN = $(OPTEE_OS_PATH)/out/arm/core/tee-pager.bin
-
 ARM_TF_FLAGS ?= \
-	BL32=$(OPTEE_OS_BIN) \
+	BL32=$(OPTEE_OS_PATH)/out/arm/core/tee-pager.bin \
 	BL33=$(EDK2_BIN) \
 	SCP_BL2=$(MCUIMAGE_BIN) \
 	DEBUG=$(DEBUG) \
