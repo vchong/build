@@ -76,7 +76,7 @@ cleaner: clean prepare-cleaner busybox-cleaner linux-cleaner strace-cleaner nvme
 -include toolchain.mk
 
 prepare:
-	@mkdir -p $(OUT_PATH)
+	mkdir -p $(OUT_PATH)
 
 .PHONY: prepare-cleaner
 prepare-cleaner:
@@ -257,7 +257,7 @@ strace:
 
 .PHONY: strace-clean
 strace-clean:
-	@if [ -e $(STRACE_PATH)/Makefile ]; then $(MAKE) -C $(STRACE_PATH) clean; fi
+	if [ -e $(STRACE_PATH)/Makefile ]; then $(MAKE) -C $(STRACE_PATH) clean; fi
 
 .PHONY: strace-cleaner
 strace-cleaner: strace-clean
@@ -317,12 +317,12 @@ grub: prepare $(GRUB_PATH)/Makefile
 
 .PHONY: grub-clean
 grub-clean:
-	@if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) clean; fi
+	if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) clean; fi
 	rm -f $(OUT_PATH)/grubaa64.efi
 
 .PHONY: grub-cleaner
 grub-cleaner: grub-clean
-	@if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) distclean; fi
+	if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) distclean; fi
 	rm -f $(GRUB_PATH)/configure
 
 ################################################################################
