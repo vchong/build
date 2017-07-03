@@ -329,8 +329,7 @@ grub-cleaner: grub-clean
 ################################################################################
 # Boot Image
 ################################################################################
-LINUX_CONSOLE_UART ?= $(CFG_NW_CONSOLE_UART)
-ifeq ($(LINUX_CONSOLE_UART),3)
+ifeq ($(CFG_NW_CONSOLE_UART),3)
 GRUBCFG = $(PATCHES_PATH)/grub/grub_uart3.cfg
 else
 GRUBCFG = $(PATCHES_PATH)/grub/grub_uart0.cfg
