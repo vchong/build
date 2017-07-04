@@ -426,24 +426,35 @@ recovery:
 	@echo '  SUBSYSTEM=="usb", ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="d00d", MODE="0666"'
 	@echo '  SUBSYSTEM=="usb", ATTRS{idVendor}=="12d1", MODE="0666", ENV{ID_MM_DEVICE_IGNORE}="1"'
 	@echo
-	@echo "Jumper 1-2: Closed (Auto power up = Boot up when power is applied)"
-	@echo "       3-4: Closed (Boot Select = Recovery: program eMMC from USB OTG)"
+	@echo "Set jumpers or switches as follows:"
+	@echo "Jumper 1-2: Closed	or	Switch  1: On"
+	@echo "       3-4: Closed	or		2: On"
+	@echo "       5-6: Open	or		3: Off"
+	@read -r -p "Press any key to continue" dummy
+	@echo
 	$(call flash_help)
+	@echo
 	python $(ROOT)/burn-boot/hisi-idt.py --img1=$(LLOADER_PATH)/l-loader.bin
+	@echo
 	@$(MAKE) --no-print flash FROM_RECOVERY=1
 
 .PHONY: flash
 flash:
 ifneq ($(FROM_RECOVERY),1)
 	@echo "Flash binaries using fastboot"
-	@echo "Jumper 1-2: Closed (Auto power up = Boot up when power is applied)"
-	@echo "       3-4: Open   (Boot Select = Boot from eMMC)"
-	@echo "       5-6: Closed (GPIO3-1 = Low: UEFI runs Fastboot app)"
+	@echo
+	@echo "Set jumpers or switches as follows:"
+	@echo "Jumper 1-2: Closed	or	Switch  1: On"
+	@echo "       3-4: Open	or		2: Off"
+	@echo "       5-6: Closed	or		3: On"
+	@read -r -p "Press any key to continue" dummy
+	@echo
 	$(call flash_help)
 	@echo "3. Wait until you see the (UART) message"
 	@echo "    \"Android Fastboot mode - version x.x Press any key to quit.\""
 	@read -r -p "   Then press any key to continue flashing" dummy
 endif
+	@echo
 	fastboot flash ptable $(LLOADER_PATH)/prm_ptable.img
 	fastboot flash fastboot $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/fip.bin
 	fastboot flash nvme $(NVME_IMG)
