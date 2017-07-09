@@ -398,8 +398,8 @@ send:
 # Flash
 ################################################################################
 define flash_help
-	@read -r -p "1. Connect USB OTG cable, the micro USB cable (press any key)" dummy
-	@read -r -p "2. Connect HiKey to power up (press any key)" dummy
+	@read -r -p "1. Connect USB OTG cable, the micro USB cable (press enter)" dummy
+	@read -r -p "2. Connect HiKey to power up (press enter)" dummy
 endef
 
 .PHONY: recovery
@@ -415,7 +415,7 @@ recovery:
 	@echo "Jumper 1-2: Closed	or	Switch	1: On"
 	@echo "       3-4: Closed	or		2: On"
 	@echo "       5-6: Open	or		3: Off"
-	@read -r -p "Press any key to continue" dummy
+	@read -r -p "Press enter to continue" dummy
 	@echo
 	$(call flash_help)
 	@echo
@@ -432,12 +432,12 @@ ifneq ($(FROM_RECOVERY),1)
 	@echo "Jumper 1-2: Closed	or	Switch	1: On"
 	@echo "       3-4: Open	or		2: Off"
 	@echo "       5-6: Closed	or		3: On"
-	@read -r -p "Press any key to continue" dummy
+	@read -r -p "Press enter to continue" dummy
 	@echo
 	$(call flash_help)
 	@echo "3. Wait until you see the (UART) message"
 	@echo "    \"Android Fastboot mode - version x.x Press any key to quit.\""
-	@read -r -p "   Then press any key to continue flashing" dummy
+	@read -r -p "Then press enter to continue flashing" dummy
 endif
 	@echo "If the board stalls while flashing $(SYSTEM_IMG),"
 	@echo "i.e. does not complete after more than 5 minutes,"
