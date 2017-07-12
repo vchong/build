@@ -436,6 +436,9 @@ recovery:
 	@echo
 	python $(ROOT)/burn-boot/hisi-idt.py --img1=$(LLOADER_PATH)/l-loader.bin
 	@echo
+	@echo "3. Wait until you see the (UART) message"
+	@echo "    \"Enter downloading mode. Please run fastboot command on Host.\""
+	@echo "    \"usb: online (highspeed)\""
 	@$(MAKE) --no-print flash FROM_RECOVERY=1
 
 .PHONY: flash
@@ -452,8 +455,8 @@ ifneq ($(FROM_RECOVERY),1)
 	$(call flash_help)
 	@echo "3. Wait until you see the (UART) message"
 	@echo "    \"Android Fastboot mode - version x.x Press any key to quit.\""
-	@read -r -p "Then press enter to continue flashing" dummy
 endif
+	@read -r -p "Then press enter to continue flashing" dummy
 	@echo
 	fastboot flash ptable $(LLOADER_PATH)/prm_ptable.img
 	fastboot flash fastboot $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/fip.bin
