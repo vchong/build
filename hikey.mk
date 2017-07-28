@@ -103,8 +103,7 @@ ifeq ($(ARM_TF_CONSOLE_UART),0)
 			CRASH_CONSOLE_BASE=PL011_UART0_BASE
 endif
 
-#arm-tf: optee-os edk2
-arm-tf:
+arm-tf: optee-os edk2
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) all fip
 
 .PHONY: arm-tf-clean
@@ -131,6 +130,7 @@ busybox-cleaner: busybox-clean-common busybox-cleaner-common
 EDK2_ARCH ?= AARCH64
 EDK2_DSC ?= OpenPlatformPkg/Platforms/Hisilicon/HiKey/HiKey.dsc
 EDK2_TOOLCHAIN ?= GCC5
+EDK2_BUILDFLAGS ?= -n `getconf _NPROCESSORS_ONLN`
 
 EDK2_CONSOLE_UART ?= $(CFG_NW_CONSOLE_UART)
 ifeq ($(EDK2_CONSOLE_UART),0)
@@ -139,7 +139,7 @@ endif
 
 define edk2-call
 	GCC5_AARCH64_PREFIX=$(AARCH64_CROSS_COMPILE) \
-	build -n 1 -a $(EDK2_ARCH) -t $(EDK2_TOOLCHAIN) -p $(EDK2_DSC) \
+	build -a $(EDK2_ARCH) -t $(EDK2_TOOLCHAIN) -p $(EDK2_DSC) \
 		-b $(EDK2_BUILD) $(EDK2_BUILDFLAGS)
 endef
 
