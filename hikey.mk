@@ -130,7 +130,7 @@ busybox-cleaner: busybox-clean-common busybox-cleaner-common
 EDK2_ARCH ?= AARCH64
 EDK2_DSC ?= OpenPlatformPkg/Platforms/Hisilicon/HiKey/HiKey.dsc
 EDK2_TOOLCHAIN ?= GCC5
-EDK2_BUILDFLAGS ?= -n `getconf _NPROCESSORS_ONLN`
+#EDK2_BUILDFLAGS ?= -n `getconf _NPROCESSORS_ONLN`
 
 EDK2_CONSOLE_UART ?= $(CFG_NW_CONSOLE_UART)
 ifeq ($(EDK2_CONSOLE_UART),0)
@@ -139,7 +139,8 @@ endif
 
 define edk2-call
 	GCC5_AARCH64_PREFIX=$(AARCH64_CROSS_COMPILE) \
-	build -a $(EDK2_ARCH) -t $(EDK2_TOOLCHAIN) -p $(EDK2_DSC) \
+	build -n `getconf _NPROCESSORS_ONLN` -a $(EDK2_ARCH) \
+		-t $(EDK2_TOOLCHAIN) -p $(EDK2_DSC) \
 		-b $(EDK2_BUILD) $(EDK2_BUILDFLAGS)
 endef
 
