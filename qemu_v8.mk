@@ -47,7 +47,7 @@ ARM_TF_EXPORTS ?= \
 	CROSS_COMPILE="$(CCACHE)$(AARCH64_CROSS_COMPILE)"
 
 ARM_TF_FLAGS ?= \
-	BL32=$(OPTEE_OS_BIN) \
+	BL32=$(OPTEE_OS_PATH)/out/arm/core/tee-header_v2.bin \
 	BL33=$(EDK2_BIN) \
 	ARM_TSP_RAM_LOCATION=tdram \
 	PLAT=qemu \
@@ -57,9 +57,21 @@ ARM_TF_FLAGS ?= \
 	BL32_RAM_LOCATION=tdram \
 	SPD=opteed
 
+CFG_WITH_PAGER ?= y
+ifeq ($(CFG_WITH_PAGER),y)
+ARM_TF_FLAGS += \
+	BL32_EXTRA1=$(OPTEE_OS_PATH)/out/arm/core/tee-pager_v2.bin \
+	BL32_EXTRA2=$(OPTEE_OS_PATH)/out/arm/core/tee-pageable_v2.bin
+else
+ARM_TF_FLAGS += \
+	BL32_EXTRA1=$(OPTEE_OS_PATH)/out/arm/core/tee-pager_v2.bin
+endif
+
 arm-tf: optee-os edk2
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) all fip
-	ln -sf $(OPTEE_OS_BIN) $(ARM_TF_PATH)/build/qemu/release/bl32.bin
+	ln -sf $(OPTEE_OS_PATH)/out/arm/core/tee-header_v2.bin $(ARM_TF_PATH)/build/qemu/release/bl32.bin
+	ln -sf $(OPTEE_OS_PATH)/out/arm/core/tee-pager_v2.bin $(ARM_TF_PATH)/build/qemu/release/bl32_extra1.bin
+	ln -sf $(OPTEE_OS_PATH)/out/arm/core/tee-pageable_v2.bin $(ARM_TF_PATH)/build/qemu/release/bl32_extra2.bin
 	ln -sf $(EDK2_BIN) $(ARM_TF_PATH)/build/qemu/release/bl33.bin
 
 arm-tf-clean:
@@ -135,7 +147,7 @@ linux-cleaner: linux-cleaner-common
 # OP-TEE
 ################################################################################
 OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-qemu_armv8a CFG_ARM64_core=y \
-			 DEBUG=0 CFG_PM_DEBUG=0
+			 DEBUG=0 CFG_PM_DEBUG=0 CFG_WITH_PAGER=$(CFG_WITH_PAGER)
 optee-os: optee-os-common
 
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=vexpress-qemu_armv8a
