@@ -65,6 +65,7 @@ MCUIMAGE_BIN			?= $(OPENPLATPKG_PATH)/Platforms/Hisilicon/HiKey/Binary/mcuimage.
 BOOT_IMG			?= $(OUT_PATH)/boot-fat.uefi.img
 NVME_IMG			?= $(OUT_PATH)/nvme.img
 SYSTEM_IMG			?= $(OUT_PATH)/debian_system.img
+SYSTEM_IMG_NEW			?= $(OUT_PATH)/debian_system_new.img
 WIFI_FW				?= $(OUT_PATH)/firmware-ti-connectivity_20161130-3_all.deb
 GRUB_PATH			?= $(ROOT)/grub
 GRUB_CONFIGFILE			?= $(OUT_PATH)/grub.configfile
@@ -339,6 +340,21 @@ ifeq ("$(wildcard $(SYSTEM_IMG))","")
 	wget $(SYSTEM_IMG_URL) -O $(SYSTEM_IMG).gz
 	gunzip $(SYSTEM_IMG).gz
 endif
+ifeq ("$(wildcard $(SYSTEM_IMG_NEW))","")
+	cd $(OUT_PATH) && \
+		sudo umount mnt > /dev/null 2>&1 || : && \
+		rm -f raw.img && \
+		simg2img $(SYSTEM_IMG) raw.img && \
+		mkdir -p mnt && \
+		sudo mount raw.img mnt && \
+		sudo rm -rf mnt/dev && \
+		cd mnt/boot/grub && \
+		sudo sed -i 's/hd0/hd1/g' grub.cfg && \
+		cd ../../../ && \
+		sudo make_ext4fs -o -L rootfs -l 2800M -s $(SYSTEM_IMG_NEW) mnt/ && \
+		sudo umount mnt && \
+		rm -f raw.img
+endif
 ifeq ("$(wildcard $(WIFI_FW))","")
 	@echo "Downloading Wi-Fi firmware package ..."
 	wget $(WIFI_FW_URL) -O $(WIFI_FW)
@@ -347,6 +363,7 @@ endif
 .PHONY: system-cleaner
 system-img-cleaner:
 	rm -f $(SYSTEM_IMG)
+	rm -f $(SYSTEM_IMG_NEW)
 	rm -f $(WIFI_FW)
 
 ################################################################################
@@ -484,7 +501,7 @@ ifneq ($(FROM_RECOVERY),1)
 endif
 	@read -r -p "Then press enter to continue flashing" dummy
 	@echo
-	@echo "If the board stalls while flashing $(SYSTEM_IMG),"
+	@echo "If the board stalls while flashing $(SYSTEM_IMG_NEW),"
 	@echo "i.e. does not complete after more than 5 minutes,"
 	@echo "please try running 'make recovery' instead"
 	@read -r -p "Press enter to continue" dummy
@@ -493,7 +510,7 @@ endif
 	fastboot flash fastboot $(ARM_TF_PATH)/build/hikey/$(ARM_TF_BUILD)/fip.bin
 	fastboot flash nvme $(NVME_IMG)
 	fastboot flash boot $(BOOT_IMG)
-	fastboot flash system $(SYSTEM_IMG)
+	fastboot flash system $(SYSTEM_IMG_NEW)
 
 .PHONY: flash-fip
 flash-fip:
@@ -505,7 +522,7 @@ flash-boot-img: boot-img
 
 .PHONY: flash-system-img
 flash-system-img: system-img
-	fastboot flash system $(SYSTEM_IMG)
+	fastboot flash system $(SYSTEM_IMG_NEW)
 
 .PHONY: help
 help:
