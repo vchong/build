@@ -153,7 +153,8 @@ BUSYBOX_COMMON_TARGET		?= TOBEDEFINED
 BUSYBOX_CLEAN_COMMON_TARGET	?= TOBEDEFINED
 
 .PHONY: busybox-common
-busybox-common: linux
+#busybox-common: linux
+busybox-common:
 	cd $(GEN_ROOTFS_PATH) &&  \
 		CROSS_COMPILE=$(CROSS_COMPILE_NS_USER) \
 		PATH=${PATH}:$(LINUX_PATH)/usr \

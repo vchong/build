@@ -81,15 +81,16 @@ DEBPKG_CONTROL_PATH		?= $(DEBPKG_PATH)/DEBIAN
 # Targets
 ################################################################################
 .PHONY: all
-all: arm-tf linux boot-img lloader system-img nvme deb
+all: prepare arm-tf boot-img lloader system-img nvme deb
 
 .PHONY: clean
-clean: arm-tf-clean atf-fb-clean edk2-clean linux-clean optee-os-clean \
-		optee-client-clean xtest-clean optee-examples-clean \
-		boot-img-clean lloader-clean grub-clean deb-clean
+clean: arm-tf-clean atf-fb-clean busybox-clean edk2-clean linux-clean \
+		optee-os-clean optee-client-clean xtest-clean \
+		optee-examples-clean update_rootfs-clean boot-img-clean \
+		lloader-clean grub-clean deb-clean
 
 .PHONY: cleaner
-cleaner: clean prepare-cleaner linux-cleaner nvme-cleaner \
+cleaner: clean prepare-cleaner busybox-cleaner linux-cleaner nvme-cleaner \
 			system-img-cleaner grub-cleaner
 
 -include toolchain.mk
@@ -131,6 +132,21 @@ arm-tf: optee-os edk2
 .PHONY: arm-tf-clean
 arm-tf-clean:
 	$(ARM_TF_EXPORTS) $(MAKE) -C $(ARM_TF_PATH) $(ARM_TF_FLAGS) clean
+
+################################################################################
+# Busybox
+################################################################################
+BUSYBOX_COMMON_TARGET = hikey nocpio
+BUSYBOX_CLEAN_COMMON_TARGET = hikey clean
+
+.PHONY: busybox
+busybox: busybox-common
+
+.PHONY: busybox-clean
+busybox-clean: busybox-clean-common
+
+.PHONY: busybox-cleaner
+busybox-cleaner: busybox-clean-common busybox-cleaner-common
 
 ################################################################################
 # EDK2 / Tianocore
@@ -247,6 +263,19 @@ optee-examples: optee-examples-common
 optee-examples-clean: optee-examples-clean-common
 
 ################################################################################
+# Root FS
+################################################################################
+.PHONY: filelist-tee
+filelist-tee: filelist-tee-common
+	env TOP=$(ROOT) $(expand-env-var) <$(PATCHES_PATH)/rootfs/initramfs-add-files.txt >> $(GEN_ROOTFS_FILELIST)
+
+.PHONY: update_rootfs
+update_rootfs: update_rootfs-common
+
+.PHONY: update_rootfs-clean
+update_rootfs-clean: update_rootfs-clean-common
+
+################################################################################
 # grub
 ################################################################################
 grub-flags := CC="$(CCACHE)gcc" \
@@ -273,12 +302,13 @@ $(GRUB_PATH)/Makefile: $(GRUB_PATH)/configure
 	cd $(GRUB_PATH) && ./configure --target=aarch64 --enable-boot-time $(grub-flags)
 
 .PHONY: grub
-grub: $(GRUB_CONFIGFILE) $(GRUB_PATH)/Makefile
+#grub: $(GRUB_CONFIGFILE) $(GRUB_PATH)/Makefile
+grub: prepare $(GRUB_PATH)/Makefile
 	$(MAKE) -C $(GRUB_PATH); \
 	cd $(GRUB_PATH) && ./grub-mkimage \
 		--verbose \
 		--output=$(OUT_PATH)/grubaa64.efi \
-		--config=$(GRUB_CONFIGFILE) \
+		--config=$(PATCHES_PATH)/grub/grub.configfile \
 		--format=arm64-efi \
 		--directory=grub-core \
 		--prefix=/boot/grub \
@@ -286,25 +316,32 @@ grub: $(GRUB_CONFIGFILE) $(GRUB_PATH)/Makefile
 
 .PHONY: grub-clean
 grub-clean:
-	@if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) clean; fi
+	if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) clean; fi
 	rm -f $(OUT_PATH)/grubaa64.efi
-	rm -f $(GRUB_CONFIGFILE)
+	#rm -f $(GRUB_CONFIGFILE)
 
 .PHONY: grub-cleaner
 grub-cleaner: grub-clean
-	@if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) distclean; fi
+	if [ -e $(GRUB_PATH)/Makefile ]; then $(MAKE) -C $(GRUB_PATH) distclean; fi
 	rm -f $(GRUB_PATH)/configure
 
 ################################################################################
 # Boot Image
 ################################################################################
+GRUBCFG = $(PATCHES_PATH)/grub/grub_debian.cfg
+
 .PHONY: boot-img
+#boot-img: linux update_rootfs edk2 grub
 boot-img: edk2 grub
 	rm -f $(BOOT_IMG)
 	/sbin/mkfs.fat -F32 -n "boot" -C $(BOOT_IMG) 65536
+	mcopy -i $(BOOT_IMG) $(LINUX_PATH)/arch/arm64/boot/Image ::
+	mcopy -i $(BOOT_IMG) $(LINUX_PATH)/arch/arm64/boot/dts/hisilicon/hi6220-hikey.dtb ::
 	mmd -i $(BOOT_IMG) EFI
 	mmd -i $(BOOT_IMG) EFI/BOOT
 	mcopy -i $(BOOT_IMG) $(OUT_PATH)/grubaa64.efi ::/EFI/BOOT/
+	mcopy -i $(BOOT_IMG) $(GRUBCFG) ::/EFI/BOOT/grub.cfg
+	@#mcopy -i $(BOOT_IMG) $(GEN_ROOTFS_PATH)/filesystem.cpio.gz ::/initrd.img
 	mcopy -i $(BOOT_IMG) $(EDK2_PATH)/Build/HiKey/$(EDK2_BUILD)_$(EDK2_TOOLCHAIN)/$(EDK2_ARCH)/AndroidFastbootApp.efi ::/EFI/BOOT/fastboot.efi
 
 .PHONY: boot-img-clean
