@@ -146,7 +146,7 @@ define expand-env-var
 awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH -3);gsub("[$$]{"var"}",ENVIRON[var])}}1'
 endef
 
-DEBUG ?= 0
+DEBUG ?= 1
 
 ################################################################################
 # default target is all
