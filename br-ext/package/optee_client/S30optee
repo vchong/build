@@ -12,6 +12,10 @@ start() {
 	printf 'Set permissions on %s: ' "/dev/tee*"
 	chown root:tee /dev/teepriv0 && chmod 0660 /dev/teepriv0 && \
 		chown root:teeclnt /dev/tee0 && chmod 0660 /dev/tee0
+	# all 3 below NOT working!?
+	#chown root:tee /dev/mmc* && chmod 0660 /dev/mmc*
+	#chown root:teeclnt /dev/mmc* && chmod 0660 /dev/mmc*
+	#chown root:test /dev/mmc* && chmod 0660 /dev/mmc*
 	status=$?
 	if [ "$status" -eq 0 ]; then
 		echo "OK"
