@@ -361,6 +361,7 @@ OPTEE_OS_COMMON_FLAGS ?= \
 	DEBUG=$(DEBUG) \
 	CFG_TEE_BENCHMARK=$(CFG_TEE_BENCHMARK)
 
+# or use BUILD_ID set in aosp env?
 ifeq ($(CFG_AOSP),y)
 OPTEE_OS_COMMON_FLAGS += \
 	CROSS_COMPILE32=arm-linux-androideabi- \
