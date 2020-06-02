@@ -365,7 +365,8 @@ OPTEE_OS_COMMON_FLAGS ?= \
 ifeq ($(CFG_AOSP),y)
 OPTEE_OS_COMMON_FLAGS += \
 	CROSS_COMPILE32=arm-linux-androideabi- \
-	CROSS_COMPILE64=aarch64-linux-android-
+	CROSS_COMPILE64=aarch64-linux-android- \
+	COMPILER=clang
 else
 OPTEE_OS_COMMON_FLAGS += \
 	CROSS_COMPILE=$(CROSS_COMPILE_S_USER) \
@@ -376,6 +377,7 @@ endif
 
 .PHONY: optee-os-common
 optee-os-common:
+	echo "CFG_AOSP = $(CFG_AOSP)"
 	echo "OPTEE_OS_COMMON_EXTRA_FLAGS = $(OPTEE_OS_COMMON_EXTRA_FLAGS)"
 	echo "OPTEE_OS_COMMON_FLAGS = $(OPTEE_OS_COMMON_FLAGS)"
 	$(MAKE) -C $(OPTEE_OS_PATH) $(OPTEE_OS_COMMON_FLAGS)
