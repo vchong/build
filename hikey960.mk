@@ -275,6 +275,7 @@ lloader: arm-tf edk2
 	cd $(LLOADER_PATH) && \
 		ln -sf $(TF_A_PATH)/build/hikey960/$(TF_A_BUILD)/bl1.bin && \
 		ln -sf $(TF_A_PATH)/build/hikey960/$(TF_A_BUILD)/bl2.bin && \
+		ln -sf $(TF_A_PATH)/build/hikey/$(TF_A_BUILD)/fip.bin && \
 		ln -sf $(EDK2_BIN) && \
 		$(MAKE) hikey960 PTABLE_LST=linux-32g
 
