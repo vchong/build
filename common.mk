@@ -82,7 +82,7 @@ endif
 # # Then in QEMU, run:
 # # $ mount -t 9p -o trans=virtio host <mount_point>
 # # Or enable QEMU_VIRTFS_AUTOMOUNT
-QEMU_VIRTFS_ENABLE	?= n
+QEMU_VIRTFS_ENABLE	?= y
 QEMU_VIRTFS_HOST_DIR	?= $(ROOT)
 
 # Persistent Secure Storage via shared folder
@@ -536,3 +536,79 @@ benchmark-app-common: optee-os optee-client
 .PHONY: benchmark-app-clean-common
 benchmark-app-clean-common:
 	$(MAKE) -C $(OPTEE_BENCHMARK_PATH) clean
+
+################################################################################
+# PR
+################################################################################
+PR_PATH ?= $(ROOT)/playready
+PR_EXPORTS ?= \
+	AARCH64_TOOLCHAIN_PATH=$(ROOT)/out-br/host/bin \
+	PATH=$(AARCH64_TOOLCHAIN_PATH):$(PATH) \
+	PLAYREADY_ROOT=$(PR_PATH) \
+	PLAYREADY_DIR=$(PR_PATH)/source/linux \
+	PLAYREADY_PROFILE=drmprofilelinux.mk \
+	LINUX_BUILD=1 \
+	DRM_BUILD_ARCH=ARM64 \
+	GCC_OPTIMIZATION_LEVEL=3 \
+	PLAYREADY_GXX="aarch64-linux-gnu-gcc" \
+	DRM_SUPPORT_TEE=3 \
+	PLAYREADY_BUILD_TYPE=CHK \
+	PLAYREADY_TEE_OPTEE=1 \
+	LIBCURL=1 \
+	PLAYREADY_ARCH="=armv8-a" \
+	PLAYREADY_SYSROOT=$(ROOT)/out-br/host/aarch64-buildroot-linux-gnu/sysroot \
+	CFG_SECURE_DATA_PATH=y \
+	CFG_USE_TEST_KBOX=true
+
+define pr_symlink
+	@if [ ! -h $(PR_PATH)/source/optee-playready ]; \
+	then \
+		echo "########################################"; \
+		echo "Symlinking optee-playready in playready!"; \
+		echo "########################################"; \
+		ln -sf $(PR_PATH)/../optee-playready $(PR_PATH)/source/; \
+	fi
+endef
+
+.PHONY: pr-common
+pr-common: optee-os optee-client-common buildroot
+	@echo "##################"
+	@echo "Building the PRPK!"
+	@echo "##################"
+	$(call pr_symlink)
+	ulimit -n 8192 && \
+		cd $(PR_PATH)/source && \
+		$(PR_EXPORTS) $(MAKE) && \
+		cd $(PR_PATH)/source/tools && \
+		$(PR_EXPORTS) $(MAKE) && \
+		cd $(PR_PATH)/test && \
+		$(PR_EXPORTS) $(MAKE) && \
+		cd $(PR_PATH)/source/optee-playready && \
+		$(PR_EXPORTS) $(MAKE) && \
+		$(PR_EXPORTS) $(MAKE) -f Makefile ta
+
+.PHONY: pr-clean-common
+pr-clean-common:
+	$(call pr_symlink)
+	cd $(PR_PATH)/source && \
+		$(PR_EXPORTS) $(MAKE) clean && \
+		cd $(PR_PATH)/source/tools && \
+		$(PR_EXPORTS) $(MAKE) clean && \
+		cd $(PR_PATH)/test && \
+		$(PR_EXPORTS) $(MAKE) clean && \
+		cd $(PR_PATH)/source/optee-playready && \
+		$(PR_EXPORTS) $(MAKE) clean && \
+		$(PR_EXPORTS) $(MAKE) -f Makefile clean
+	rm -rf $(PR_PATH)/obj/* $(PR_PATH)/obj_test/*
+	unlink $(PR_PATH)/source/optee-playready
+
+define pr-help
+	@echo \* To run the PR test suite, use the alias mentioned below in the \'Normal World\' Terminal
+	@echo \* Enter \'pritee_test_utility.exe -drmpath:/host/playready/Samples\' to run the PR test suite
+endef
+
+.PHONY: pr-help-common
+pr-help-common:
+	$(call pr_symlink)
+	cd $(PR_PATH)/source/optee-playready && \
+		$(PR_EXPORTS) $(MAKE) -f Makefile qemu_help
