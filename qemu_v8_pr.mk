@@ -43,9 +43,9 @@ SOC_TERM_PATH		?= $(ROOT)/soc_term
 ################################################################################
 # Targets
 ################################################################################
-all: arm-tf buildroot edk2 linux optee-os qemu soc-term pr
+all: arm-tf buildroot edk2 linux optee-os qemu soc-term pr pr-ta
 clean: arm-tf-clean buildroot-clean edk2-clean linux-clean optee-os-clean \
-	qemu-clean soc-term-clean check-clean pr-clean
+	qemu-clean soc-term-clean check-clean pr-ta-clean pr-clean
 
 include toolchain.mk
 
@@ -175,9 +175,13 @@ optee-os-clean: optee-os-clean-common
 ################################################################################
 pr: pr-common
 
+pr-ta: pr-ta-common
+
 pr-help: pr-help-common
 
 pr-clean: pr-clean-common
+
+pr-ta-clean: pr-ta-clean-common
 
 ################################################################################
 # Soc-term

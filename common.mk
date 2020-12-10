@@ -584,7 +584,21 @@ pr-common: optee-os optee-client-common buildroot
 		cd $(PR_PATH)/test && \
 		$(PR_EXPORTS) $(MAKE) && \
 		cd $(PR_PATH)/source/optee-playready && \
-		$(PR_EXPORTS) $(MAKE) && \
+		$(PR_EXPORTS) $(MAKE)
+
+.PHONY: pr-ta-common
+pr-ta-common: pr-common
+	@echo "###################"
+	@echo "Building the PR TA!"
+	@echo "###################"
+	cd $(PR_PATH)/source/optee-playready && \
+		$(PR_EXPORTS) $(MAKE) -f Makefile ta
+
+pr-ta-nodeps:
+	@echo "###################"
+	@echo "Building the PR TA!"
+	@echo "###################"
+	cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE) -f Makefile ta
 
 .PHONY: pr-clean-common
@@ -597,9 +611,17 @@ pr-clean-common:
 		cd $(PR_PATH)/test && \
 		$(PR_EXPORTS) $(MAKE) clean && \
 		cd $(PR_PATH)/source/optee-playready && \
-		$(PR_EXPORTS) $(MAKE) clean && \
-		$(PR_EXPORTS) $(MAKE) -f Makefile clean
+		$(PR_EXPORTS) $(MAKE) clean
 	rm -rf $(PR_PATH)/obj/* $(PR_PATH)/obj_test/*
+	unlink $(PR_PATH)/source/optee-playready
+
+.PHONY: pr-ta-clean-common
+pr-ta-clean-common:
+	$(call pr_symlink)
+	cd $(PR_PATH)/source/optee-playready/ta && \
+		$(PR_EXPORTS) $(MAKE) \
+		TA_DEV_KIT_DIR=$(OPTEE_OS_TA_DEV_KIT_DIR) clean
+	rm -rf $(PR_PATH)/source/optee-playready/out/ta
 	unlink $(PR_PATH)/source/optee-playready
 
 define pr-help
