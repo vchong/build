@@ -579,9 +579,9 @@ pr-common: optee-os optee-client-common buildroot
 	ulimit -n 8192 && \
 		cd $(PR_PATH)/source && \
 		$(PR_EXPORTS) $(MAKE) && \
-		cd $(PR_PATH)/source/tools && \
+		cd $(PR_PATH)/source/linux/libraries && \
 		$(PR_EXPORTS) $(MAKE) && \
-		cd $(PR_PATH)/test && \
+		cd $(PR_PATH)/source/test && \
 		$(PR_EXPORTS) $(MAKE) && \
 		cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE)
@@ -606,9 +606,9 @@ pr-clean-common:
 	@#$(call pr_symlink)
 	cd $(PR_PATH)/source && \
 		$(PR_EXPORTS) $(MAKE) clean && \
-		cd $(PR_PATH)/source/tools && \
+		cd $(PR_PATH)/source/linux/libraries && \
 		$(PR_EXPORTS) $(MAKE) clean && \
-		cd $(PR_PATH)/test && \
+		cd $(PR_PATH)/source/test && \
 		$(PR_EXPORTS) $(MAKE) clean && \
 		cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE) clean
