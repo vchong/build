@@ -575,7 +575,7 @@ pr-common: optee-os optee-client-common buildroot
 	@echo "##################"
 	@echo "Building the PRPK!"
 	@echo "##################"
-	$(call pr_symlink)
+	@#$(call pr_symlink)
 	ulimit -n 8192 && \
 		cd $(PR_PATH)/source && \
 		$(PR_EXPORTS) $(MAKE) && \
@@ -603,7 +603,7 @@ pr-ta-nodeps:
 
 .PHONY: pr-clean-common
 pr-clean-common:
-	$(call pr_symlink)
+	@#$(call pr_symlink)
 	cd $(PR_PATH)/source && \
 		$(PR_EXPORTS) $(MAKE) clean && \
 		cd $(PR_PATH)/source/tools && \
@@ -613,16 +613,16 @@ pr-clean-common:
 		cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE) clean
 	rm -rf $(PR_PATH)/obj/* $(PR_PATH)/obj_test/*
-	unlink $(PR_PATH)/source/optee-playready
+	@#unlink $(PR_PATH)/source/optee-playready
 
 .PHONY: pr-ta-clean-common
 pr-ta-clean-common:
-	$(call pr_symlink)
+	@#$(call pr_symlink)
 	cd $(PR_PATH)/source/optee-playready/ta && \
 		$(PR_EXPORTS) $(MAKE) \
 		TA_DEV_KIT_DIR=$(OPTEE_OS_TA_DEV_KIT_DIR) clean
 	rm -rf $(PR_PATH)/source/optee-playready/out/ta
-	unlink $(PR_PATH)/source/optee-playready
+	@#unlink $(PR_PATH)/source/optee-playready
 
 define pr-help
 	@echo \* To run the PR test suite, use the alias mentioned below in the \'Normal World\' Terminal
@@ -631,6 +631,6 @@ endef
 
 .PHONY: pr-help-common
 pr-help-common:
-	$(call pr_symlink)
+	@#$(call pr_symlink)
 	cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE) -f Makefile qemu_help
