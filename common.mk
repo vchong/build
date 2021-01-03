@@ -42,6 +42,7 @@ BUILDROOT_TARGET_ROOT		?= $(ROOT)/out-br/target
 
 # default high verbosity. slow uarts shall specify lower if prefered
 CFG_TEE_CORE_LOG_LEVEL		?= 3
+CFG_TEE_TA_LOG_LEVEL		?= 3
 
 # default disable latency benchmarks (over all OP-TEE layers)
 CFG_TEE_BENCHMARK		?= n
@@ -442,6 +443,7 @@ OPTEE_OS_COMMON_FLAGS ?= \
 	CROSS_COMPILE_ta_arm64="$(CCACHE)$(AARCH64_CROSS_COMPILE)" \
 	CROSS_COMPILE_ta_arm32="$(CCACHE)$(AARCH32_CROSS_COMPILE)" \
 	CFG_TEE_CORE_LOG_LEVEL=$(CFG_TEE_CORE_LOG_LEVEL) \
+	CFG_TEE_TA_LOG_LEVEL=$(CFG_TEE_TA_LOG_LEVEL) \
 	DEBUG=$(DEBUG) \
 	CFG_TEE_BENCHMARK=$(CFG_TEE_BENCHMARK)
 
