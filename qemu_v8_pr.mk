@@ -179,6 +179,8 @@ pr-ta: pr-ta-common
 
 pr-help: pr-help-common
 
+pr-help-dbg: pr-help-dbg-common
+
 pr-clean: pr-clean-common
 
 pr-ta-clean: pr-ta-clean-common

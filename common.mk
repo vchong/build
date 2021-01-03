@@ -634,3 +634,9 @@ pr-help-common:
 	@#$(call pr_symlink)
 	cd $(PR_PATH)/source/optee-playready && \
 		$(PR_EXPORTS) $(MAKE) -f Makefile qemu_help
+
+.PHONY: pr-help-dbg-common
+pr-help-dbg-common:
+	@#$(call pr_symlink)
+	cd $(PR_PATH)/source/optee-playready && \
+		$(PR_EXPORTS) $(MAKE) -f Makefile qemu_help_dbg
