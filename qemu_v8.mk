@@ -385,23 +385,20 @@ run-only:
 	ln -sf $(ROOT)/out-br/images/rootfs.cpio.gz $(BINARIES_PATH)/
 	$(call check-terminal)
 	$(call run-help)
-	$(call launch-terminal,54320,"Normal World")
-	$(call launch-terminal,54321,"Secure World")
-	$(call wait-for-ports,54320,54321)
-	cd $(BINARIES_PATH) && $(QEMU_BUILD)/aarch64-softmmu/qemu-system-aarch64 \
-		-nographic \
-		-serial tcp:localhost:54320 -serial tcp:localhost:54321 \
-		-smp $(QEMU_SMP) \
-		-s -S -machine virt,secure=on,gic-version=$(QEMU_GIC_VERSION),virtualization=$(QEMU_VIRT) \
-		-cpu cortex-a57 \
-		-d unimp -semihosting-config enable=on,target=native \
-		-m $(QEMU_MEM) \
-		-bios bl1.bin		\
-		-initrd rootfs.cpio.gz \
-		-kernel Image -no-acpi \
-		-append 'console=ttyAMA0,38400 keep_bootcon root=/dev/vda2 $(QEMU_KERNEL_BOOTARGS)' \
-		$(QEMU_XEN) \
-		$(QEMU_EXTRA_ARGS)
+	$(call launch-terminal,5552,"Normal World")
+	$(call launch-terminal,5553,"Secure World")
+	$(call wait-for-ports,5552,5553)
+	@#echo "ROOT = $(ROOT)"
+	@#echo "ls ROOT/../trusty = $(shell ls $(ROOT)/../trusty/)"
+	@if [ -e $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 ]; then \
+		echo "Running build-qemu-generic-arm64"; \
+		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 && ./run; \
+	elif [ -e $(ROOT)/../trusty/build-root/build-qemu-generic-arm64-test-debug ]; then \
+		echo "Running build-qemu-generic-arm64-test-debug"; \
+		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64-test-debug && ./run; \
+	else \
+		echo "No trusty build found!"; \
+	fi
 
 ifneq ($(filter check check-rust,$(MAKECMDGOALS)),)
 CHECK_DEPS := all
