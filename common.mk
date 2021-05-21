@@ -35,6 +35,7 @@ OPTEE_CLIENT_PATH		?= $(ROOT)/optee_client
 OPTEE_TEST_PATH			?= $(ROOT)/optee_test
 OPTEE_EXAMPLES_PATH		?= $(ROOT)/optee_examples
 OPTEE_RUST_PATH			?= $(ROOT)/optee_rust
+KMGK_PATH			?= $(ROOT)/kmgk
 BUILDROOT_TARGET_ROOT		?= $(ROOT)/out-br/target
 
 # default high verbosity. slow uarts shall specify lower if prefered
@@ -284,6 +285,12 @@ BR2_PACKAGE_OPTEE_RUST_EXAMPLES_EXT_SITE ?= $(OPTEE_RUST_PATH)
 BR2_PACKAGE_OPTEE_RUST_EXAMPLES_TC_PATH_ENV = $(PATH):$(ROOT)/toolchains/aarch64/bin
 endif
 # The OPTEE_OS package builds nothing, it just installs files into the
+## The kmgk package builds TAs only and installs them into the root FS
+BR2_PACKAGE_KMGK_EXT ?= y
+BR2_PACKAGE_KMGK_EXT_CROSS_COMPILE ?= $(CROSS_COMPILE_S_USER)
+BR2_PACKAGE_KMGK_EXT_SDK ?= $(OPTEE_OS_TA_DEV_KIT_DIR)
+BR2_PACKAGE_KMGK_EXT_SITE ?= $(KMGK_PATH)
+## The OPTEE_OS package builds nothing, it just installs files into the
 # root FS when applicable (for example: shared libraries)
 BR2_PACKAGE_OPTEE_OS_EXT ?= y
 BR2_PACKAGE_OPTEE_OS_EXT_SDK ?= $(OPTEE_OS_TA_DEV_KIT_DIR)
