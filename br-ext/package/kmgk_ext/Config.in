@@ -1,0 +1,26 @@
+config BR2_PACKAGE_KMGK_EXT
+	bool "kmgk"
+	help
+	  http://github.org/linaro-swg/kmgk
+
+config BR2_PACKAGE_KMGK_EXT_SITE
+	string "kmgk path"
+	default ""
+	help
+	  The path to the source directory of kmgk
+
+if BR2_PACKAGE_KMGK_EXT
+
+config BR2_PACKAGE_KMGK_EXT_SDK
+	string "OPTEE SDK path"
+	default ""
+	help
+	  some help
+
+config BR2_PACKAGE_KMGK_EXT_CROSS_COMPILE
+	string "OPTEE cross compiler"
+	default ""
+	help
+	  some help
+
+endif
