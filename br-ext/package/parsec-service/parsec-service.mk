@@ -19,7 +19,8 @@ PARSEC_SERVICE_CARGO_OPTS = \
 	$(if $(BR2_ENABLE_DEBUG),,--release) \
 	--target=$(RUSTC_TARGET_NAME) \
 	--manifest-path=$(@D)/Cargo.toml \
-	--features all-providers,cryptoki/generate-bindings,tss-esapi/generate-bindings
+	--features pkcs11-provider
+#	--features all-providers,cryptoki/generate-bindings,tss-esapi/generate-bindings
 
 define PARSEC_SERVICE_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(PARSEC_SERVICE_CARGO_ENV) \
