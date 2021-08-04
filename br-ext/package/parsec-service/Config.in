@@ -1,4 +1,4 @@
-config BR2_PACKAGE_PARSEC_SVC
+config BR2_PACKAGE_PARSEC_SERVICE
 	bool "parsec-service"
 	select BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
 	select BR2_PACKAGE_HOST_RUSTC
@@ -6,7 +6,7 @@ config BR2_PACKAGE_PARSEC_SVC
 	help
 	  https://crates.io/crates/parsec-service
 
-config BR2_PACKAGE_PARSEC_SVC_SITE
+config BR2_PACKAGE_PARSEC_SERVICE_SITE
 	string "Parsec service path"
 	default ""
 	help
