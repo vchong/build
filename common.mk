@@ -297,6 +297,23 @@ endif
 # Embed opensc for pkcs11-tool
 BR2_PACKAGE_OPENSC ?= y
 
+# Parsec service
+PARSEC_SVC_PATH ?= $(ROOT)/parsec
+BR2_PACKAGE_PARSEC_SVC ?= y
+BR2_PACKAGE_PARSEC_SVC_SITE ?= $(PARSEC_SVC_PATH)
+
+# Parsec tool
+PARSEC_TOOL_PATH ?= $(ROOT)/parsec-tool
+BR2_PACKAGE_PARSEC_TOOL ?= y
+BR2_PACKAGE_PARSEC_TOOL_SITE ?= $(PARSEC_TOOL_PATH)
+
+#BR2_PACKAGE_HOST_CARGO=y
+#BR2_PACKAGE_HOST_RUSTC=y
+#BR2_PACKAGE_HOST_RUST=y
+#BR2_PACKAGE_CARGO=y
+#BR2_PACKAGE_RUSTC=y
+#BR2_PACKAGE_RUST=y
+
 # All BR2_* variables from the makefile or the environment are appended to
 # ../out-br/extra.conf. All values are quoted "..." except y and n.
 double-quote = "#" # This really sets the variable to " and avoids upsetting vim's syntax highlighting

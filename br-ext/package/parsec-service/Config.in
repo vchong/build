@@ -1,0 +1,13 @@
+config BR2_PACKAGE_PARSEC_SVC
+	bool "parsec-service"
+	select BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	select BR2_PACKAGE_HOST_CARGO
+	help
+	  https://crates.io/crates/parsec-service
+
+config BR2_PACKAGE_PARSEC_SVC_SITE
+	string "Parsec service path"
+	default ""
+	help
+	  The path to the source directory of Parsec service

@@ -1,0 +1,13 @@
+config BR2_PACKAGE_PARSEC_TOOL
+	bool "parsec-tool"
+	select BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	select BR2_PACKAGE_HOST_CARGO
+	help
+	  https://crates.io/crates/parsec-tool
+
+config BR2_PACKAGE_PARSEC_TOOL_SITE
+	string "Parsec tool path"
+	default ""
+	help
+	  The path to the source directory of Parsec tool
