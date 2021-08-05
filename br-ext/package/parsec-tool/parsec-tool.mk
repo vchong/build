@@ -25,7 +25,7 @@ PARSEC_TOOL_BIN_DIR = target/$(RUSTC_TARGET_NAME)/$(PARSEC_TOOL_CARGO_MODE)
 PARSEC_TOOL_CARGO_OPTS = \
 	--$(PARSEC_TOOL_CARGO_MODE) \
 	--target=$(RUSTC_TARGET_NAME) \
-	--manifest-path=$(@D)/Cargo.toml \
+	--manifest-path=$(@D)/Cargo.toml
 
 define PARSEC_TOOL_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(PARSEC_TOOL_CARGO_ENV) \
