@@ -1,5 +1,5 @@
-CARGO_VERSION = 0.55.0
-#CARGO_SOURCE = parsec-$(CARGO_VERSION).tar.gz
+CARGO_VERSION = 0.53.0
+#CARGO_SOURCE = cargo-$(CARGO_VERSION).tar.gz
 #CARGO_SITE = $(call github,rust-lang,cargo,$(CARGO_VERSION))
 CARGO_SOURCE = local
 CARGO_SITE = $(BR2_PACKAGE_CARGO_SITE)
@@ -35,8 +35,8 @@ define CARGO_BUILD_CMDS
 endef
 
 define CARGO_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/$(CARGO_BIN_DIR)/parsec-tool \
-		$(TARGET_DIR)/usr/bin/parsec-tool
+	$(INSTALL) -D -m 0755 $(@D)/$(CARGO_BIN_DIR)/cargo \
+		$(TARGET_DIR)/usr/bin/cargo
 endef
 
 $(eval $(generic-package))
