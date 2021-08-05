@@ -1,0 +1,4 @@
+config BR2_PACKAGE_SOFTHSMV2
+	bool "softhsmv2"
+	help
+	    Installs softhsmv2

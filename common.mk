@@ -297,6 +297,8 @@ endif
 # Embed opensc for pkcs11-tool
 BR2_PACKAGE_OPENSC ?= y
 
+BR2_PACKAGE_SOFTHSMV2 ?= y
+
 # Parsec service
 PARSEC_SERVICE_PATH ?= $(ROOT)/parsec
 BR2_PACKAGE_PARSEC_SERVICE ?= y
