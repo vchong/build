@@ -1,0 +1,40 @@
+PARSEC_TOOL_VERSION = 0.3.1
+#PARSEC_TOOL_SOURCE = parsec-$(PARSEC_TOOL_VERSION).tar.gz
+#PARSEC_TOOL_SITE = $(call github,parallaxsecond,parsec-tool,$(PARSEC_TOOL_VERSION))
+PARSEC_TOOL_SOURCE = local
+PARSEC_TOOL_SITE = $(BR2_PACKAGE_PARSEC_TOOL_SITE)
+PARSEC_TOOL_SITE_METHOD = local
+PARSEC_TOOL_LICENSE = Public Domain
+PARSEC_TOOL_INSTALL_STAGING = YES
+
+# host-cargo does NOT exist
+#PARSEC_TOOL_DEPENDENCIES = host-rustc host-cargo
+PARSEC_TOOL_DEPENDENCIES = host-rustc
+
+PARSEC_TOOL_CARGO_ENV = CARGO_HOME=$(HOST_DIR)/usr/share/cargo
+#PARSEC_TOOL_CARGO_ENV += RUST_TARGET_PATH=$(HOST_DIR)/etc/rustc
+
+ifeq ($(BR2_ENABLE_DEBUG),y)
+PARSEC_TOOL_CARGO_MODE = debug
+else
+PARSEC_TOOL_CARGO_MODE = release
+endif
+
+PARSEC_TOOL_BIN_DIR = target/$(RUSTC_TARGET_NAME)/$(PARSEC_TOOL_CARGO_MODE)
+
+PARSEC_TOOL_CARGO_OPTS = \
+	--$(PARSEC_TOOL_CARGO_MODE) \
+	--target=$(RUSTC_TARGET_NAME) \
+	--manifest-path=$(@D)/Cargo.toml \
+
+define PARSEC_TOOL_BUILD_CMDS
+	$(TARGET_MAKE_ENV) $(PARSEC_TOOL_CARGO_ENV) \
+		cargo build $(PARSEC_TOOL_CARGO_OPTS)
+endef
+
+define PARSEC_TOOL_INSTALL_TARGET_CMDS
+	$(INSTALL) -D -m 0755 $(@D)/$(PARSEC_TOOL_BIN_DIR)/parsec-tool \
+		$(TARGET_DIR)/usr/bin/parsec-tool
+endef
+
+$(eval $(generic-package))
