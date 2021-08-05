@@ -1,0 +1,12 @@
+config BR2_PACKAGE_CARGO
+	bool "cargo"
+	select BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	help
+	  https://crates.io/crates/cargo
+
+config BR2_PACKAGE_CARGO_SITE
+	string "Cargo path"
+	default ""
+	help
+	  The path to the source directory of Cargo

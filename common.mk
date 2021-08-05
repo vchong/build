@@ -307,10 +307,14 @@ PARSEC_TOOL_PATH ?= $(ROOT)/parsec-tool
 BR2_PACKAGE_PARSEC_TOOL ?= y
 BR2_PACKAGE_PARSEC_TOOL_SITE ?= $(PARSEC_TOOL_PATH)
 
+# Cargo
+CARGO_PATH ?= $(ROOT)/cargo
+BR2_PACKAGE_CARGO ?= y
+BR2_PACKAGE_CARGO_SITE ?= $(CARGO_PATH)
+
+#BR2_PACKAGE_HOST_CARGO=y # obsolete!
 #BR2_PACKAGE_HOST_RUSTC=y
 #BR2_PACKAGE_HOST_RUST=y
-#BR2_PACKAGE_RUSTC=y
-#BR2_PACKAGE_RUST=y
 
 # All BR2_* variables from the makefile or the environment are appended to
 # ../out-br/extra.conf. All values are quoted "..." except y and n.
