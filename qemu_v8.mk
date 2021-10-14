@@ -388,6 +388,9 @@ run-only:
 	$(call launch-terminal,5552,"Normal World")
 	$(call launch-terminal,5553,"Secure World")
 	$(call wait-for-ports,5552,5553)
+	@#$(call launch-terminal,5554,"Normal World")
+	@#$(call launch-terminal,5555,"Secure World")
+	@#$(call wait-for-ports,5554,5555)
 	@#echo "ROOT = $(ROOT)"
 	@#echo "ls ROOT/../trusty = $(shell ls $(ROOT)/../trusty/)"
 	@if [ -e $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 ]; then \
