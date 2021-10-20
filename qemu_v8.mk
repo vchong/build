@@ -395,10 +395,12 @@ run-only:
 	@#echo "ls ROOT/../trusty = $(shell ls $(ROOT)/../trusty/)"
 	@if [ -e $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 ]; then \
 		echo "Running build-qemu-generic-arm64"; \
-		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 && ./run; \
+		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64 && \
+			./run --debug --debug-on-error; \
 	elif [ -e $(ROOT)/../trusty/build-root/build-qemu-generic-arm64-test-debug ]; then \
 		echo "Running build-qemu-generic-arm64-test-debug"; \
-		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64-test-debug && ./run; \
+		cd $(ROOT)/../trusty/build-root/build-qemu-generic-arm64-test-debug && \
+			./run --debug=True --debug-on-error; \
 	else \
 		echo "No trusty build found!"; \
 	fi
