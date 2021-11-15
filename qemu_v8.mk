@@ -40,11 +40,26 @@ UBOOT ?= n
 # Option to build with GICV3 enabled
 GICV3 ?= y
 
+# Option to test the flow with SWTPM
+# We will be using builtin rootfs and linux for this option for now
+# to enable us to use efiboot flow and tpm2 tools in rootfs
+# Linux can be built and used in efi boot with its partition created
+# but for current usecase we use pre-built linux and rootfs
+SWTPM ?= y
+
+ifeq ($(SWTPM),y)
+	UBOOT	= y
+	MEASURED_BOOT	= y
+	ALGO	?= sha256
+endif
+
 ################################################################################
 # Paths to git projects and various binaries
 ################################################################################
+MEASURED_BOOT		?= n
 TF_A_PATH		?= $(ROOT)/trusted-firmware-a
 BINARIES_PATH		?= $(ROOT)/out/bin
+ROOTFS_PATH		?= $(ROOT)/rootfs
 EDK2_PATH		?= $(ROOT)/edk2
 EDK2_TOOLCHAIN		?= GCC5
 EDK2_ARCH		?= AARCH64
@@ -82,6 +97,8 @@ BL33_BIN		?= $(EDK2_BIN)
 BL33_DEPS		?= edk2
 endif
 
+QEMU_DTB		?= $(BINARIES_PATH)/qemu-aarch64.dtb
+
 XEN_PATH		?= $(ROOT)/xen
 XEN_IMAGE		?= $(XEN_PATH)/xen/xen.efi
 XEN_EXT4		?= $(BINARIES_PATH)/xen.ext4
@@ -95,9 +112,19 @@ else
 	QEMU_GIC_VERSION = 2
 endif
 
+
 ################################################################################
 # Targets
 ################################################################################
+
+
+ifeq ($(SWTPM),y)
+
+TARGET_DEPS := arm-tf optee-os qemu rootfs_debian
+TARGET_CLEAN := arm-tf-clean optee-os-clean qemu-clean check-clean u-boot-clean
+TARGET_DEPS 		+= $(BL33_DEPS)
+
+else
 TARGET_DEPS := arm-tf buildroot linux optee-os qemu
 TARGET_CLEAN := arm-tf-clean buildroot-clean linux-clean optee-os-clean \
 	qemu-clean check-clean
@@ -116,11 +143,16 @@ TARGET_DEPS		+= xen xen-create-image buildroot-domu
 TARGET_CLEAN		+= xen-clean buildroot-domu-clean
 endif
 
+endif
+
 all: $(TARGET_DEPS)
 
 clean: $(TARGET_CLEAN)
 
 $(BINARIES_PATH):
+	mkdir -p $@
+
+$(ROOTFS_PATH):
 	mkdir -p $@
 
 include toolchain.mk
@@ -152,6 +184,14 @@ TF_A_FLAGS ?= \
 	SPD=opteed \
 	DEBUG=$(TF_A_DEBUG) \
 	LOG_LEVEL=$(TF_A_LOGLVL)
+
+ifeq ($(MEASURED_BOOT),y)
+TF_A_TRUSTED_BOARD_BOOT	= y
+TF_A_FLAGS += \
+	MEASURED_BOOT=1 \
+	EVENT_LOG_LEVEL=20 \
+	TPM_HASH_ALG=$(ALGO)
+endif
 
 ifeq ($(TF_A_TRUSTED_BOARD_BOOT),y)
 TF_A_FLAGS += \
@@ -218,13 +258,18 @@ edk2-clean: edk2-clean-common
 ################################################################################
 # U-Boot
 ################################################################################
+UBOOT_DEFCONFIG		?= $(ROOT)/build/kconfigs/u-boot_qemu_v8.conf
+
 ifeq ($(XEN_BOOT),y)
-UBOOT_DEFCONFIG_FILES := $(UBOOT_PATH)/configs/qemu_arm64_defconfig		\
-			 $(ROOT)/build/kconfigs/u-boot_xen_qemu_v8.conf
-else
-UBOOT_DEFCONFIG_FILES := $(UBOOT_PATH)/configs/qemu_arm64_defconfig		\
-			 $(ROOT)/build/kconfigs/u-boot_qemu_v8.conf
+UBOOT_DEFCONFIG		:= $(ROOT)/build/kconfigs/u-boot_xen_qemu_v8.conf
 endif
+
+ifeq ($(SWTPM),y)
+UBOOT_DEFCONFIG		:= $(ROOT)/build/kconfigs/u-boot_qemu_v8_swtpm.conf
+endif
+
+UBOOT_DEFCONFIG_FILES := $(UBOOT_PATH)/configs/qemu_arm64_defconfig		\
+			 $(UBOOT_DEFCONFIG)
 
 UBOOT_COMMON_FLAGS ?= CROSS_COMPILE=$(CROSS_COMPILE_NS_KERNEL)
 
@@ -380,28 +425,86 @@ QEMU_MEM 	?= 1057
 QEMU_VIRT	= false
 endif
 
+QEMU_BOOT_IMAGE 	?= -bios bl1.bin
+
+		
+ifeq ($(SWTPM),y)
+
+KERNEL_EXT4	?= $(BINARIES_PATH)/esp.img
+ROOTFS		?= rootfs
+ROOTFS_BZ2	?= $(ROOTFS).ext4.bz2
+ROOTFS_EXT4	?= $(BINARIES_PATH)/$(ROOTFS).ext4
+
+SRC_RFS ?= https://people.linaro.org/~ilias.apalodimas/qemu/debian/rootfs-linaro-buster-raw-unknown-20200720-440.ext4.bz2
+
+# Download toolchain macro for saving some repetition
+# $(1) is $AARCH.._PATH		: i.e., path to the destination
+# $(2) is $SRC_AARCH.._GCC	: is the downloaded tar.gz file
+# $(3) is $.._GCC_VERSION	: the name of the file to download
+define drfs
+	@if [ ! -d "$(1)" ]; then \
+		echo "Downloading $(2) ..."; \
+		mkdir -p $(1); \
+		curl --retry 5 -# $(2) -o $(1)/$(3).ext4.bz2 || \
+			{ echo Download failed; exit 1;}; \
+		bzip2 -d $(1)/$(3).ext4.bz2;	\
+	fi
+endef
+
+rootfs_debian:
+	$(call drfs,$(ROOTFS_PATH),$(SRC_RFS),$(ROOTFS))
+
+QEMU_SWTPM ?=	\
+    -device tpm-tis-device,tpmdev=tpm0 \
+    -tpmdev emulator,id=tpm0,chardev=chrtpm \
+    -chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock \
+    -device virtio-blk-device,drive=hd1 \
+    -drive if=none,file=$(KERNEL_EXT4),format=raw,id=hd1 \
+    -device virtio-blk-device,drive=disk0	\
+    -drive id=disk0,file=$(ROOTFS_EXT4),if=none,format=raw 
+
+else
+
+QEMU_IMAGES 	?= \
+                -initrd rootfs.cpio.gz \
+                -kernel Image -no-acpi \
+                -append 'console=ttyAMA0,38400 keep_bootcon root=/dev/vda2 $(QEMU_KERNEL_BOOTARGS)'
+endif
+
+   # -drive if=none,file=$(BOOT_EXT4),format=raw,id=hd2 \
+   # -device virtio-blk-device,drive=hd2 \
+
+
+QEMU_PARAMS	?= -nographic \
+                -serial tcp:localhost:54320 -serial tcp:localhost:54321 \
+                -smp $(QEMU_SMP) \
+                -s -S -machine virt,secure=on,gic-version=$(QEMU_GIC_VERSION),virtualization=$(QEMU_VIRT) \
+                -cpu cortex-a57 \
+                -d unimp -semihosting-config enable=on,target=native \
+                -m $(QEMU_MEM) \
+                $(QEMU_SWTPM)
+
+$(QEMU_DTB): qemu $(BINARIES_PATH)
+	ln -sf $(ROOT)/rootfs/$(ROOTFS).ext4 $(ROOTFS_EXT4)
+	$(QEMU_BUILD)/aarch64-softmmu/qemu-system-aarch64 $(QEMU_PARAMS) -machine dumpdtb=$(QEMU_DTB)
+
+qemu-dump-dtb: $(QEMU_DTB)
+
 .PHONY: run-only
 run-only:
-	ln -sf $(ROOT)/out-br/images/rootfs.cpio.gz $(BINARIES_PATH)/
+	ln -sf $(ROOT)/rootfs/rootfs.ext4 $(BINARIES_PATH)/
 	$(call check-terminal)
 	$(call run-help)
 	$(call launch-terminal,54320,"Normal World")
 	$(call launch-terminal,54321,"Secure World")
 	$(call wait-for-ports,54320,54321)
 	cd $(BINARIES_PATH) && $(QEMU_BUILD)/aarch64-softmmu/qemu-system-aarch64 \
-		-nographic \
-		-serial tcp:localhost:54320 -serial tcp:localhost:54321 \
-		-smp $(QEMU_SMP) \
-		-s -S -machine virt,secure=on,gic-version=$(QEMU_GIC_VERSION),virtualization=$(QEMU_VIRT) \
-		-cpu cortex-a57 \
-		-d unimp -semihosting-config enable=on,target=native \
-		-m $(QEMU_MEM) \
-		-bios bl1.bin		\
-		-initrd rootfs.cpio.gz \
-		-kernel Image -no-acpi \
-		-append 'console=ttyAMA0,38400 keep_bootcon root=/dev/vda2 $(QEMU_KERNEL_BOOTARGS)' \
-		$(QEMU_XEN) \
-		$(QEMU_EXTRA_ARGS)
+		$(QEMU_PARAMS) \
+		$(QEMU_DEVICES) \
+		$(QEMU_BOOT_IMAGE) \
+		$(QEMU_IMAGES) \
+		$(QEMU_XEN)	\
+                $(QEMU_EXTRA_ARGS)
 
 ifneq ($(filter check check-rust,$(MAKECMDGOALS)),)
 CHECK_DEPS := all
@@ -412,7 +515,7 @@ check-args := --timeout $(TIMEOUT)
 endif
 
 check: $(CHECK_DEPS)
-	ln -sf $(ROOT)/out-br/images/rootfs.cpio.gz $(BINARIES_PATH)/
+	ln -sf $(ROOT)/rootfs/rootfs.ext4 $(BINARIES_PATH)/
 	cd $(BINARIES_PATH) && \
 		export QEMU=$(QEMU_BUILD)/aarch64-softmmu/qemu-system-aarch64 && \
 		export QEMU_SMP=$(QEMU_SMP) && \
