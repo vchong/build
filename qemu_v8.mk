@@ -327,6 +327,9 @@ OPTEE_OS_COMMON_FLAGS += DEBUG=$(DEBUG) CFG_ARM_GICV3=$(GICV3)
 ifeq ($(XEN_BOOT),y)
 OPTEE_OS_COMMON_FLAGS += CFG_VIRTUALIZATION=y
 endif
+ifeq ($(MEASURED_BOOT),y)
+OPTEE_OS_COMMON_FLAGS += CFG_CORE_TPM_EVENT_LOG=y
+endif
 optee-os: optee-os-common
 
 optee-os-clean: optee-os-clean-common
