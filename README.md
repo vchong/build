@@ -46,6 +46,8 @@ https://github.com/stefanberger/swtpm/wiki
 
 Once Installed, you can launch it using the following command
 
+	$ mkdir /tmp/mytpm1
+	$ swtpm_setup --tpmstate /tmp/mytpm1 --tpm2 --pcr-banks sha256
 	$ swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock  --log level=40 --tpm2
     
 # How to run
@@ -55,14 +57,48 @@ Once Installed, you can launch it using the following command
 ### Create esp.img
 
 ESP partition is required for variable storage and boot using bootefi. 
-You need to manually follow the steps below to generate a esp.img and manually place it in out/bin folder
+You need to manually follow the steps below to generate a esp.img and manually **place it in out/bin folder**
 
-	$ dd if=/dev/zero of=esp.img bs=1MB count=500
+	$ dd if=/dev/zero of=esp.img bs=512 count=1024000
 	$ sudo gdisk esp.img
 
-- When asked create a GPT ,then press n and create a new partiton with all 500mb.
+- When asked create a GPT, then press n and create a new partiton with all 500mb.
 - Then press 't' (once you create a new partition) then select ef00 as it's type
 - Now press w to write the changes
+
+Log output:
+```
+> sudo gdisk esp.img
+GPT fdisk (gdisk) version 1.0.3
+
+Partition table scan:
+  MBR: not present
+  BSD: not present
+  APM: not present
+  GPT: not present
+
+Creating new GPT entries.
+
+Command (? for help): n
+Partition number (1-128, default 1): 
+First sector (34-1023966, default = 2048) or {+-}size{KMGTP}: 
+Last sector (2048-1023966, default = 1023966) or {+-}size{KMGTP}: 
+Current type is 'Linux filesystem'
+Hex code or GUID (L to show codes, Enter = 8300): ef00
+Changed type of partition to 'EFI System'
+
+Command (? for help): w
+
+Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING
+PARTITIONS!!
+
+Do you want to proceed? (Y/N): y
+OK; writing new GUID partition table (GPT) to esp.img.
+Warning: The kernel is still using the old partition table.
+The new table will be used at the next reboot or after you
+run partprobe(8) or kpartx(8)
+The operation has completed successfully.
+```
 
 Once esp.img is created, do the following
 
